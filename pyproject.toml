@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cycle-navigator"
+version = "0.1.0"
+description = "Navigate cropping systems as a label-free continuum: query the landscape by curve shape and recolour it along any phenometric axis, live and region-wide."
+authors = [{ name = "Osmar L. F. de Carvalho", email = "osmarlfcarvalho@gmail.com" }]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+keywords = ["cropping intensity", "phenology", "continuum", "satellite image time series", "interactive"]
+
+# ⚠️⚠️ O MOTOR NAO MORA AQUI, E ISSO E' UMA AFIRMACAO DO ARTIGO.
+# O artigo diz que o que o usuario arrasta nesta ferramenta e' o mesmo codigo que produziu os numeros
+# publicados. Essa afirmacao so' e' verdadeira enquanto o motor fenometrico (`ts_annotator.core.pheno`)
+# vier daqui, como DEPENDENCIA. No dia em que alguem copiar `pheno.py` para dentro deste repositorio
+# "para simplificar", a afirmacao vira falsa em silencio, e nenhum revisor teria como notar.
+# `tests/test_motor_compartilhado.py` falha se isso acontecer.
+dependencies = [
+    "ts-annotator @ git+https://github.com/osmarluiz/ts-annotator.git@bb2e997",
+    "numpy>=1.24",
+    "rasterio>=1.3",
+    "PyQt6>=6.4",
+]
+
+[project.optional-dependencies]
+pivots = ["geopandas>=0.13"]   # sobreposicao do cadastro de pivos: util, nao obrigatorio
+dev = ["pytest>=7"]
+
+[project.scripts]
+cycle-navigator = "cycle_navigator.app:main"
+
+[project.urls]
+Homepage = "https://github.com/osmarluiz/cycle-navigator"
+Engine = "https://github.com/osmarluiz/ts-annotator"
+Paper = "https://github.com/osmarluiz/crop-continuum-paper"
+
+[tool.setuptools.packages.find]
+where = ["src"]

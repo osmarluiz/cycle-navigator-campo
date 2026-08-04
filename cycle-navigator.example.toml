@@ -1,0 +1,14 @@
+# Copie para cycle-navigator.toml e ajuste. Nada aqui e' escrito no codigo.
+
+# obrigatorio: a raiz do recorte, com cube/, input/ e products/ dentro
+aoi = "E:/sits_aoi_crop"
+
+# obrigatorio: os doze meses do ano-safra, EM ORDEM (outubro a setembro)
+meses = [202210, 202211, 202212, 202301, 202302, 202303,
+         202304, 202305, 202306, 202307, 202308, 202309]
+
+# opcional: cadastro de pivos para sobrepor ao mapa (precisa do extra `pivots`)
+# pivos = "D:/PROJECTS/sits/data/external/ana_pivos_RIDE_2022.gpkg"
+
+# opcional: predicao de cultivo. Sem ela, o detector fenologico decide sozinho quem e' lavoura.
+# predicao = "E:/sits_aoi_crop/predictions/pred_it_v2.tif"
