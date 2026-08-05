@@ -7,14 +7,19 @@ falsa no dia em que alguem copiar `pheno.py` para ca' "para simplificar" ou "par
 outro repo". O modo de falha e' silencioso: tudo continua rodando, os numeros e' que deixam de ser os
 mesmos, e nenhum revisor teria como perceber.
 
-Sao tres perguntas:
+Sao quatro perguntas:
   1. existe arquivo de motor DENTRO deste repositorio?          (copia explicita)
   2. o motor que importamos vem mesmo de `ts_annotator`?        (import sequestrado)
   3. o modulo importado esta' FORA da arvore deste repositorio? (copia no sys.path)
+  4. o commit fixado do motor existe no remoto PUBLICO?         (pin que so' resolve nesta maquina)
 """
 import ast
 import inspect
+import json
 import pathlib
+import re
+import urllib.error
+import urllib.request
 
 import pytest
 
@@ -56,3 +61,29 @@ def test_o_motor_importado_vem_do_pacote_instalado():
     assert RAIZ not in onde.parents, (
         f"ts_annotator.core.pheno foi carregado de DENTRO deste repositorio ({onde}). "
         "O motor tem que vir do pacote instalado.")
+
+
+def test_o_commit_fixado_do_motor_existe_no_remoto():
+    """⚠️ Um pin que so' resolve na maquina do autor e' pior do que nao ter pin.
+
+    `pip install` le' o commit do pyproject e vai busca-lo no GitHub. Se o commit nunca foi empurrado
+    (mora num branch local do ts-annotator), a instalacao quebra para todo mundo menos para quem o
+    escreveu, e o leitor nao tem como conferir que a ferramenta roda o motor dos resultados. Aqui isso
+    foi real: a versao 0.1.0 nasceu fixada em bb2e997, que so' existia em `leg-prototype` local.
+    """
+    pin = re.search(r"ts-annotator @ git\+(https://github\.com/([^/]+/[^/.]+))\.git@(\w+)",
+                    (RAIZ / "pyproject.toml").read_text(encoding="utf-8"))
+    assert pin, "pyproject.toml sem o pin do ts-annotator: a dependencia do motor e' obrigatoria"
+    repo, sha = pin.group(2), pin.group(3)
+    try:
+        with urllib.request.urlopen(
+                f"https://api.github.com/repos/{repo}/commits/{sha}", timeout=15) as r:
+            visto = json.load(r)["sha"]
+    except urllib.error.HTTPError as e:
+        if e.code in (404, 422):
+            pytest.fail(f"o commit fixado {sha} nao existe em {repo}: empurre o branch do motor ou "
+                        f"refixe o pyproject num commit publicado, senao `pip install` so' funciona aqui")
+        pytest.skip(f"GitHub respondeu {e.code}; sem rede confiavel para conferir o pin")
+    except (urllib.error.URLError, TimeoutError):
+        pytest.skip("sem rede: o pin nao foi conferido")
+    assert visto.startswith(sha), f"o remoto resolveu {sha} para {visto}"
