@@ -22,7 +22,7 @@ repository is the **application**: configuration, assembly, entry point. It reim
 
 1. is any engine file copied into this tree?
 2. is any engine function redefined here under a different file name?
-3. is the `ts_annotator.core.pheno` we import actually loaded from **outside** this tree?
+3. is the `pheno_engine` we import actually loaded from **outside** this tree?
 
 The third exists because a stray `pheno.py` on the path would satisfy the first two and still break the
 claim. Run them with `pytest`.

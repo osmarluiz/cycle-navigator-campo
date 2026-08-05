@@ -14,12 +14,21 @@ keywords = ["cropping intensity", "phenology", "continuum", "satellite image tim
 
 # ⚠️⚠️ O MOTOR NAO MORA AQUI, E ISSO E' UMA AFIRMACAO DO ARTIGO.
 # O artigo diz que o que o usuario arrasta nesta ferramenta e' o mesmo codigo que produziu os numeros
-# publicados. Essa afirmacao so' e' verdadeira enquanto o motor fenometrico (`ts_annotator.core.pheno`)
+# publicados. Essa afirmacao so' e' verdadeira enquanto o motor fenometrico (`pheno_engine`)
 # vier daqui, como DEPENDENCIA. No dia em que alguem copiar `pheno.py` para dentro deste repositorio
 # "para simplificar", a afirmacao vira falsa em silencio, e nenhum revisor teria como notar.
 # `tests/test_motor_compartilhado.py` falha se isso acontecer.
+#
+# ⚠️ SAO DUAS DEPENDENCIAS DE CODIGO NOSSO, e elas fazem coisas diferentes. `pheno-engine` e' o motor,
+# 200 linhas de numpy, e e' dele que sai todo numero do artigo. `ts-annotator` entra pelos widgets Qt
+# e pelo I/O de raster (RasterSource, TimeSeriesSource, render, TiledMapView, CycleInspectWindow).
+# ⚠️ LACUNA CONHECIDA: o `main` publico do ts-annotator ainda NAO tem ui/cycle_inspect_window.py, que
+# vive num branch local. Ate' isso ser reconciliado, este pacote instala mas quebra no import daquele
+# widget. `tests/test_motor_compartilhado.py` cobra o pin do motor; esta lacuna esta' anotada aqui de
+# proposito, em vez de escondida atras de uma copia local do arquivo.
 dependencies = [
-    "ts-annotator @ git+https://github.com/osmarluiz/ts-annotator.git@bb2e997",
+    "pheno-engine @ git+https://github.com/osmarluiz/pheno-engine.git@v0.1.0",
+    "ts-annotator @ git+https://github.com/osmarluiz/ts-annotator.git@main",
     "numpy>=1.24",
     "rasterio>=1.3",
     "PyQt6>=6.4",
@@ -34,7 +43,8 @@ cycle-navigator = "cycle_navigator.app:main"
 
 [project.urls]
 Homepage = "https://github.com/osmarluiz/cycle-navigator"
-Engine = "https://github.com/osmarluiz/ts-annotator"
+Engine = "https://github.com/osmarluiz/pheno-engine"
+Annotator = "https://github.com/osmarluiz/ts-annotator"
 Paper = "https://github.com/osmarluiz/crop-continuum-paper"
 
 [tool.setuptools.packages.find]

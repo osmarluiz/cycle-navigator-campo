@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """O NAVEGADOR: le' o continuo de sistemas de cultivo em vez de consultar uma legenda.
 
-O motor fenometrico e a interface vem do pacote `ts-annotator`, declarado como dependencia. Este
+O motor fenometrico e a interface vem do pacote `pheno-engine`, declarado como dependencia. Este
 pacote e' a APLICACAO: configuracao, montagem e ponto de entrada. Ele nao reimplementa nada do motor,
 e ha' um teste que falha se alguem tentar (`tests/test_motor_compartilhado.py`).
 
