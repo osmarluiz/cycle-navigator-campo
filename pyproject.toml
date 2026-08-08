@@ -45,7 +45,6 @@ cycle-navigator = "cycle_navigator.app:main"
 Homepage = "https://github.com/osmarluiz/cycle-navigator"
 Engine = "https://github.com/osmarluiz/pheno-engine"
 Annotator = "https://github.com/osmarluiz/ts-annotator"
-Paper = "https://github.com/osmarluiz/crop-continuum-paper"
 
 [tool.setuptools.packages.find]
 where = ["src"]
