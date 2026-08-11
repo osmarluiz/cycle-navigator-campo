@@ -12,15 +12,15 @@ license = { text = "MIT" }
 requires-python = ">=3.10"
 keywords = ["cropping intensity", "phenology", "continuum", "satellite image time series", "interactive"]
 
-# ⚠️⚠️ O MOTOR NAO MORA AQUI, E ISSO E' UMA AFIRMACAO DO ARTIGO.
-# O artigo diz que o que o usuario arrasta nesta ferramenta e' o mesmo codigo que produziu os numeros
-# publicados. Essa afirmacao so' e' verdadeira enquanto o motor fenometrico (`pheno_engine`)
+# ⚠️⚠️ O MOTOR NAO MORA AQUI, E ISSO E' UMA GARANTIA DA FERRAMENTA.
+# O que o usuario arrasta nesta ferramenta tem de ser o mesmo codigo que produziu os numeros que ele
+# reporta. Essa afirmacao so' e' verdadeira enquanto o motor fenometrico (`pheno_engine`)
 # vier daqui, como DEPENDENCIA. No dia em que alguem copiar `pheno.py` para dentro deste repositorio
-# "para simplificar", a afirmacao vira falsa em silencio, e nenhum revisor teria como notar.
+# "para simplificar", a afirmacao vira falsa em silencio, e ninguem teria como notar.
 # `tests/test_motor_compartilhado.py` falha se isso acontecer.
 #
 # ⚠️ SAO DUAS DEPENDENCIAS DE CODIGO NOSSO, e elas fazem coisas diferentes. `pheno-engine` e' o motor,
-# 200 linhas de numpy, e e' dele que sai todo numero do artigo. `ts-annotator` entra pelos widgets Qt
+# 200 linhas de numpy, e e' dele que sai todo eixo lido. `ts-annotator` entra pelos widgets Qt
 # e pelo I/O de raster (RasterSource, TimeSeriesSource, render, TiledMapView, CycleInspectWindow).
 # ⚠️ LACUNA CONHECIDA: o `main` publico do ts-annotator ainda NAO tem ui/cycle_inspect_window.py, que
 # vive num branch local. Ate' isso ser reconciliado, este pacote instala mas quebra no import daquele
