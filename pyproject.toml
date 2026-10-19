@@ -22,10 +22,14 @@ keywords = ["cropping intensity", "phenology", "continuum", "satellite image tim
 # ⚠️ SAO DUAS DEPENDENCIAS DE CODIGO NOSSO, e elas fazem coisas diferentes. `pheno-engine` e' o motor,
 # 200 linhas de numpy, e e' dele que sai todo eixo lido. `ts-annotator` entra pelos widgets Qt
 # e pelo I/O de raster (RasterSource, TimeSeriesSource, render, TiledMapView, CycleInspectWindow).
-# ⚠️ LACUNA CONHECIDA: o `main` publico do ts-annotator ainda NAO tem ui/cycle_inspect_window.py, que
-# vive num branch local. Ate' isso ser reconciliado, este pacote instala mas quebra no import daquele
-# widget. `tests/test_motor_compartilhado.py` cobra o pin do motor; esta lacuna esta' anotada aqui de
-# proposito, em vez de escondida atras de uma copia local do arquivo.
+# ⚠️ LACUNA CONHECIDA (atualizada): a janela usada aqui e' `ui/continuum_window.ContinuumWindow`.
+# `ui/cycle_inspect_window.py`, que uma versao anterior deste arquivo importava, NAO existe em ref
+# nenhum do ts-annotator -- era um rename planejado que nunca aconteceu, e o import quebrava sempre.
+# Trocado pelo widget que existe de fato.
+# ⚠️ O QUE AINDA FALTA: `continuum_window.py` tambem nao esta' no `main` PUBLICO. O clone de trabalho
+# esta' 136 commits a' frente do origin/main, e esses commits nunca foram empurrados. Logo
+# `pip install` deste pyproject puxa um ts-annotator SEM a janela, e a ferramenta so' abre para quem
+# tem o clone local. Isto se resolve empurrando o ts-annotator, nao copiando o widget para ca'.
 dependencies = [
     "pheno-engine @ git+https://github.com/osmarluiz/pheno-engine.git@v0.1.0",
     "ts-annotator @ git+https://github.com/osmarluiz/ts-annotator.git@main",

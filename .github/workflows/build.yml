@@ -1,0 +1,44 @@
+# Compila o executavel no Windows e no Mac (Apple Silicon e Intel) e publica como artefato.
+# Rode em Actions -> "build" -> Run workflow, ou crie uma tag v*. O Mac so' se compila num Mac:
+# e' para isso que este arquivo existe.
+name: build
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            nome: windows-x64
+          - os: macos-latest        # Apple Silicon (M1/M2/M3/M4)
+            nome: macos-arm64
+          - os: macos-13            # Intel
+            nome: macos-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: dependencias
+        # ⚠️ PyQt6 fixado: 6.11 + Qt6 6.11.2 quebrou o import de QtCore no Windows
+        # ("procedimento nao encontrado"); 6.7.1/6.7.3 e' o par que carrega.
+        run: |
+          python -m pip install --upgrade pip
+          pip install "PyQt6==6.7.1" "PyQt6-Qt6==6.7.3" "PyQt6-sip==13.8.0"
+          pip install ".[pivots]" pyinstaller
+      - name: testes
+        run: python -m pytest -q
+      - name: pyinstaller
+        working-directory: build
+        run: pyinstaller --noconfirm --clean cycle-navigator.spec
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CycleNavigator-${{ matrix.nome }}
+          path: build/dist/
+          if-no-files-found: error

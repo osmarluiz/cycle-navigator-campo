@@ -1,0 +1,703 @@
+﻿python.exe : 125 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment 
+manager is being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+No linha:5 caractere:1
++ & $py -m PyInstaller --noconfirm --clean --distpath "D:\NAVIGATOR\bui ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (125 WARNING: As...does not exist.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+144 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.8
+144 INFO: Python: 3.12.7 (conda)
+166 INFO: Platform: Windows-11-10.0.26200-SP0
+166 INFO: Python environment: D:\ENV\navigator
+169 INFO: Removing temporary files and cleaning cache in C:\Users\Admin-2\AppData\Local\pyinstaller
+101 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+100 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+99 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+106 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+103 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+95 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+385 WARNING: Failed to collect submodules for 'pyqtgraph.opengl' because importing 'pyqtgraph.opengl' raised: 
+ModuleNotFoundError: No module named 'OpenGL'
+130 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+100 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+96 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+98 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+100 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+438 WARNING: Failed to collect submodules for 'matplotlib.tests' because importing 'matplotlib.tests' raised: OSError: 
+The baseline image directory does not exist. This is most likely because the test data is not installed. You may need 
+to install matplotlib from source to get the test data.
+97 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+15419 INFO: Module search paths (PYTHONPATH):
+['D:\\NAVIGATOR\\build',
+ 'C:\\Users\\Admin-2\\anaconda3\\python312.zip',
+ 'C:\\Users\\Admin-2\\anaconda3\\DLLs',
+ 'C:\\Users\\Admin-2\\anaconda3\\Lib',
+ 'C:\\Users\\Admin-2\\anaconda3',
+ 'D:\\ENV\\navigator',
+ 'D:\\ENV\\navigator\\Lib\\site-packages',
+ 'D:\\NAVIGATOR\\src',
+ 'C:\\ts-annotator\\src',
+ 'D:\\NAVIGATOR\\build',
+ 'D:\\NAVIGATOR\\src']
+102 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+15816 INFO: Appending 'datas' from .spec
+15915 INFO: checking Analysis
+15915 INFO: Building Analysis because Analysis-00.toc is non existent
+15915 INFO: Looking for Python shared library...
+15915 INFO: Using Python shared library: C:\Users\Admin-2\anaconda3\python312.dll
+15915 INFO: Running Analysis Analysis-00.toc
+15915 INFO: Target bytecode optimization level: 0
+15915 INFO: Initializing module dependency graph...
+15917 INFO: Initializing module graph hook caches...
+15950 INFO: Analyzing modules for base_library.zip ...
+104 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+98 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+100 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+17576 INFO: Processing standard module hook 'hook-encodings.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+144 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+18209 INFO: Processing standard module hook 'hook-math.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+19977 INFO: Processing standard module hook 'hook-pickle.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+21569 INFO: Processing standard module hook 'hook-heapq.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+22142 INFO: Caching module dependency graph...
+22214 INFO: Analyzing D:\NAVIGATOR\build\launcher.py
+22301 INFO: Processing standard module hook 'hook-numpy.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+23131 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+23132 INFO: SetuptoolsInfo: initializing cached setuptools info...
+325 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+24465 INFO: Processing standard module hook 'hook-platform.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+24697 INFO: Processing standard module hook 'hook-sysconfig.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+25032 INFO: Processing standard module hook 'hook-webbrowser.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+26176 INFO: Processing standard module hook 'hook-_ctypes.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+27543 INFO: Processing standard module hook 'hook-difflib.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+27823 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+27942 INFO: Processing standard module hook 'hook-xml.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+32184 INFO: Processing standard module hook 'hook-PyQt6.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+33092 INFO: Processing standard module hook 'hook-PyQt6.QtCore.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+36548 INFO: Processing standard module hook 'hook-PyQt6.QtWidgets.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+39912 INFO: Processing standard module hook 'hook-PyQt6.QtGui.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+60063 INFO: Processing standard module hook 'hook-pyqtgraph.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+99 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+366 WARNING: Failed to collect submodules for 'pyqtgraph.opengl' because importing 'pyqtgraph.opengl' raised: 
+ModuleNotFoundError: No module named 'OpenGL'
+60959 INFO: hook-pyqtgraph: selected 'PyQt6' as Qt bindings because hook for 'PyQt6' has been run before.
+61150 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+61173 INFO: Processing standard module hook 'hook-PyQt6.uic.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+61731 INFO: Processing standard module hook 'hook-PyQt6.QtSvg.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+62230 INFO: Processing standard module hook 'hook-PyQt6.QtOpenGLWidgets.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+62912 INFO: Processing standard module hook 'hook-PyQt6.QtOpenGL.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+63623 INFO: Processing standard module hook 'hook-PyQt6.QtTest.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+64605 INFO: Processing standard module hook 'hook-scipy.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+92 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+65339 INFO: Processing standard module hook 'hook-pytest.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+65855 INFO: Processing standard module hook 'hook-pygments.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+96 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+92 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+97 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+67417 INFO: Processing standard module hook 'hook-py.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+67663 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+67993 INFO: Processing pre-safe-import-module hook 'hook-tomli.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+67993 INFO: Setuptools: 'tomli' appears to be a setuptools-vendored copy - creating alias to 
+'setuptools._vendor.tomli'!
+68011 INFO: Processing standard module hook 'hook-setuptools.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+68074 INFO: Processing pre-safe-import-module hook 'hook-distutils.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+68168 INFO: Processing pre-safe-import-module hook 'hook-jaraco.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+68168 INFO: Setuptools: 'jaraco' appears to be a full setuptools-vendored copy - creating alias to 
+'setuptools._vendor.jaraco'!
+68195 INFO: Processing pre-safe-import-module hook 'hook-more_itertools.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+68195 INFO: Setuptools: 'more_itertools' appears to be a setuptools-vendored copy - creating alias to 
+'setuptools._vendor.more_itertools'!
+68440 INFO: Processing standard module hook 'hook-_osx_support.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+69007 INFO: Processing standard module hook 'hook-setuptools._vendor.jaraco.text.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+69009 INFO: Processing pre-safe-import-module hook 'hook-importlib_resources.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+69032 INFO: Processing pre-safe-import-module hook 'hook-backports.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+69033 INFO: Setuptools: 'backports' appears to be a full setuptools-vendored copy - creating alias to 
+'setuptools._vendor.backports'!
+71308 INFO: Processing pre-safe-import-module hook 'hook-wheel.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+74243 INFO: Processing standard module hook 'hook-scipy.special._ufuncs.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+74752 INFO: Processing standard module hook 'hook-scipy.linalg.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+80827 INFO: Processing standard module hook 'hook-scipy.spatial._ckdtree.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+81089 INFO: Processing standard module hook 'hook-matplotlib.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+82075 INFO: Processing standard module hook 'hook-matplotlib.backend_bases.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+82278 INFO: Processing standard module hook 'hook-PIL.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+82427 INFO: Processing standard module hook 'hook-PIL.Image.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+104 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+83215 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+84778 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+84950 INFO: Processing standard module hook 'hook-matplotlib.pyplot.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+85195 INFO: Processing standard module hook 'hook-matplotlib.figure.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+86330 INFO: Processing standard module hook 'hook-dateutil.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+86474 INFO: Processing pre-safe-import-module hook 'hook-six.moves.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+89080 INFO: Processing standard module hook 'hook-pandas.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+97 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is being 
+used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+90922 INFO: Processing standard module hook 'hook-zoneinfo.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+93807 INFO: Processing standard module hook 'hook-pandas.io.formats.style.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+97251 INFO: Processing standard module hook 'hook-pandas.plotting.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+100713 INFO: Processing standard module hook 'hook-sqlite3.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+114 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+101121 INFO: Processing standard module hook 'hook-pandas.io.clipboard.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+101154 INFO: Processing standard module hook 'hook-qtpy.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+101154 INFO: hook-qtpy: selected 'PyQt6' as Qt bindings because hook for 'PyQt6' has been run before.
+101496 INFO: Processing standard module hook 'hook-xml.dom.domreg.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+103404 INFO: Processing pre-safe-import-module hook 'hook-gi.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+103416 INFO: Processing standard module hook 'hook-certifi.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+103906 INFO: Processing standard module hook 'hook-scipy.spatial.transform.rotation.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+105657 INFO: Processing standard module hook 'hook-scipy.stats._stats.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+106947 INFO: Processing standard module hook 'hook-scipy.sparse.csgraph.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+108479 INFO: Processing standard module hook 'hook-scipy.special._ellip_harm_2.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+109814 INFO: Processing standard module hook 'hook-matplotlib.backends.backend_qtagg.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+109846 INFO: Processing standard module hook 'hook-matplotlib.backends.qt_compat.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+109846 INFO: hook-matplotlib.backends.qt_compat: selected 'PyQt6' as Qt bindings because hook for 'PyQt6' has been run 
+before.
+112291 INFO: Processing standard module hook 'hook-qtawesome.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+112417 INFO: Processing standard module hook 'hook-geopandas.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+112489 INFO: Processing standard module hook 'hook-shapely.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+113151 INFO: Processing standard module hook 'hook-pyproj.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+113182 WARNING: Datas for pyproj not found at:
+D:\ENV\navigator\Library\share\proj
+114523 INFO: Analyzing hidden import 'rasterio._example'
+114523 INFO: Analyzing hidden import 'rasterio._features'
+114523 INFO: Analyzing hidden import 'rasterio._fill'
+114523 INFO: Analyzing hidden import 'rasterio._vendor'
+114523 INFO: Analyzing hidden import 'rasterio._vendor.click_plugins'
+114545 INFO: Analyzing hidden import 'rasterio._vendor.snuggs'
+114574 INFO: Analyzing hidden import 'rasterio._warp'
+114574 INFO: Analyzing hidden import 'rasterio.abc'
+114579 INFO: Analyzing hidden import 'rasterio.cache'
+114579 INFO: Analyzing hidden import 'rasterio.features'
+114667 INFO: Analyzing hidden import 'rasterio.fill'
+114691 INFO: Analyzing hidden import 'rasterio.mask'
+114709 INFO: Analyzing hidden import 'rasterio.merge'
+114741 INFO: Analyzing hidden import 'rasterio.path'
+114746 INFO: Analyzing hidden import 'rasterio.plot'
+114770 INFO: Analyzing hidden import 'rasterio.rio.blocks'
+114812 INFO: Analyzing hidden import 'rasterio.rio.bounds'
+114829 INFO: Analyzing hidden import 'rasterio.rio.calc'
+114845 INFO: Analyzing hidden import 'rasterio.rio.clip'
+114861 INFO: Analyzing hidden import 'rasterio.rio.convert'
+114879 INFO: Analyzing hidden import 'rasterio.rio.create'
+114892 INFO: Analyzing hidden import 'rasterio.rio.edit_info'
+114901 INFO: Analyzing hidden import 'rasterio.rio.env'
+114924 INFO: Analyzing hidden import 'rasterio.rio.gcps'
+114948 INFO: Analyzing hidden import 'rasterio.rio.info'
+114984 INFO: Analyzing hidden import 'rasterio.rio.insp'
+114995 INFO: Analyzing hidden import 'rasterio.rio.main'
+115010 INFO: Analyzing hidden import 'rasterio.rio.mask'
+115016 INFO: Analyzing hidden import 'rasterio.rio.merge'
+115027 INFO: Analyzing hidden import 'rasterio.rio.overview'
+115051 INFO: Analyzing hidden import 'rasterio.rio.rasterize'
+115120 INFO: Analyzing hidden import 'rasterio.rio.rm'
+115145 INFO: Analyzing hidden import 'rasterio.rio.sample'
+115163 INFO: Analyzing hidden import 'rasterio.rio.shapes'
+115178 INFO: Analyzing hidden import 'rasterio.rio.stack'
+115217 INFO: Analyzing hidden import 'rasterio.rio.transform'
+115229 INFO: Analyzing hidden import 'rasterio.rio.warp'
+115259 INFO: Analyzing hidden import 'rasterio.sample'
+115274 INFO: Analyzing hidden import 'rasterio.tools'
+115277 INFO: Analyzing hidden import 'rasterio.vrt'
+115303 INFO: Analyzing hidden import 'pyproj.__main__'
+115319 INFO: Analyzing hidden import 'shapely._geos'
+115320 INFO: Analyzing hidden import 'shapely.conftest'
+115323 INFO: Analyzing hidden import 'shapely.plotting'
+115339 INFO: Analyzing hidden import 'shapely.speedups'
+115346 INFO: Analyzing hidden import 'shapely.testing'
+115362 INFO: Analyzing hidden import 'shapely.tests'
+115362 INFO: Analyzing hidden import 'shapely.tests.common'
+115389 INFO: Analyzing hidden import 'shapely.tests.geometry'
+115390 INFO: Analyzing hidden import 'shapely.tests.geometry.test_collection'
+115413 INFO: Analyzing hidden import 'shapely.tests.geometry.test_coords'
+115432 INFO: Analyzing hidden import 'shapely.tests.geometry.test_decimal'
+115446 INFO: Analyzing hidden import 'shapely.tests.geometry.test_emptiness'
+115452 INFO: Analyzing hidden import 'shapely.tests.geometry.test_equality'
+115477 INFO: Analyzing hidden import 'shapely.tests.geometry.test_format'
+115491 INFO: Analyzing hidden import 'shapely.tests.geometry.test_geometry_base'
+115523 INFO: Analyzing hidden import 'shapely.tests.geometry.test_hash'
+115523 INFO: Analyzing hidden import 'shapely.tests.geometry.test_linestring'
+115538 INFO: Analyzing hidden import 'shapely.tests.geometry.test_multi'
+115540 INFO: Analyzing hidden import 'shapely.tests.geometry.test_multilinestring'
+115547 INFO: Analyzing hidden import 'shapely.tests.geometry.test_multipoint'
+115556 INFO: Analyzing hidden import 'shapely.tests.geometry.test_multipolygon'
+115563 INFO: Analyzing hidden import 'shapely.tests.geometry.test_point'
+115591 INFO: Analyzing hidden import 'shapely.tests.geometry.test_polygon'
+115620 INFO: Analyzing hidden import 'shapely.tests.legacy'
+115620 INFO: Analyzing hidden import 'shapely.tests.legacy.conftest'
+115640 INFO: Analyzing hidden import 'shapely.tests.legacy.test_affinity'
+115665 INFO: Analyzing hidden import 'shapely.tests.legacy.test_box'
+115667 INFO: Analyzing hidden import 'shapely.tests.legacy.test_buffer'
+115697 INFO: Analyzing hidden import 'shapely.tests.legacy.test_cga'
+115701 INFO: Analyzing hidden import 'shapely.tests.legacy.test_clip_by_rect'
+115714 INFO: Analyzing hidden import 'shapely.tests.legacy.test_create_inconsistent_dimensionality'
+115736 INFO: Analyzing hidden import 'shapely.tests.legacy.test_delaunay'
+115745 INFO: Analyzing hidden import 'shapely.tests.legacy.test_empty_polygons'
+115748 INFO: Analyzing hidden import 'shapely.tests.legacy.test_equality'
+115757 INFO: Analyzing hidden import 'shapely.tests.legacy.test_geointerface'
+115760 INFO: Analyzing hidden import 'shapely.tests.legacy.test_invalid_geometries'
+115760 INFO: Analyzing hidden import 'shapely.tests.legacy.test_linear_referencing'
+115779 INFO: Analyzing hidden import 'shapely.tests.legacy.test_linemerge'
+115781 INFO: Analyzing hidden import 'shapely.tests.legacy.test_locale'
+115792 INFO: Analyzing hidden import 'shapely.tests.legacy.test_make_valid'
+115806 INFO: Analyzing hidden import 'shapely.tests.legacy.test_mapping'
+115814 INFO: Analyzing hidden import 'shapely.tests.legacy.test_minimum_clearance'
+115823 INFO: Analyzing hidden import 'shapely.tests.legacy.test_ndarrays'
+115825 INFO: Analyzing hidden import 'shapely.tests.legacy.test_nearest'
+115837 INFO: Analyzing hidden import 'shapely.tests.legacy.test_operations'
+115852 INFO: Analyzing hidden import 'shapely.tests.legacy.test_operators'
+115858 INFO: Analyzing hidden import 'shapely.tests.legacy.test_orient'
+115867 INFO: Analyzing hidden import 'shapely.tests.legacy.test_parallel_offset'
+115872 INFO: Analyzing hidden import 'shapely.tests.legacy.test_persist'
+115875 INFO: Analyzing hidden import 'shapely.tests.legacy.test_pickle'
+115880 INFO: Analyzing hidden import 'shapely.tests.legacy.test_polygonize'
+115885 INFO: Analyzing hidden import 'shapely.tests.legacy.test_polylabel'
+115904 INFO: Analyzing hidden import 'shapely.tests.legacy.test_predicates'
+115917 INFO: Analyzing hidden import 'shapely.tests.legacy.test_prepared'
+115927 INFO: Analyzing hidden import 'shapely.tests.legacy.test_products_z'
+115929 INFO: Analyzing hidden import 'shapely.tests.legacy.test_shape'
+115940 INFO: Analyzing hidden import 'shapely.tests.legacy.test_shared_paths'
+115949 INFO: Analyzing hidden import 'shapely.tests.legacy.test_singularity'
+115949 INFO: Analyzing hidden import 'shapely.tests.legacy.test_snap'
+115949 INFO: Analyzing hidden import 'shapely.tests.legacy.test_split'
+115981 INFO: Analyzing hidden import 'shapely.tests.legacy.test_substring'
+115995 INFO: Analyzing hidden import 'shapely.tests.legacy.test_svg'
+116018 INFO: Analyzing hidden import 'shapely.tests.legacy.test_transform'
+116027 INFO: Analyzing hidden import 'shapely.tests.legacy.test_union'
+116040 INFO: Analyzing hidden import 'shapely.tests.legacy.test_validation'
+116042 INFO: Analyzing hidden import 'shapely.tests.legacy.test_vectorized'
+116057 INFO: Analyzing hidden import 'shapely.tests.legacy.test_voronoi_diagram'
+116069 INFO: Analyzing hidden import 'shapely.tests.legacy.test_wkb'
+116080 INFO: Analyzing hidden import 'shapely.tests.legacy.test_wkt'
+116089 INFO: Analyzing hidden import 'shapely.tests.legacy.threading_test'
+116093 INFO: Analyzing hidden import 'shapely.tests.test_constructive'
+116187 INFO: Analyzing hidden import 'shapely.tests.test_coordinates'
+116221 INFO: Analyzing hidden import 'shapely.tests.test_coverage'
+116256 INFO: Analyzing hidden import 'shapely.tests.test_creation'
+116292 INFO: Analyzing hidden import 'shapely.tests.test_creation_indices'
+116340 INFO: Analyzing hidden import 'shapely.tests.test_decorators'
+116360 INFO: Analyzing hidden import 'shapely.tests.test_geometry'
+116395 INFO: Analyzing hidden import 'shapely.tests.test_io'
+116470 INFO: Analyzing hidden import 'shapely.tests.test_linear'
+116484 INFO: Analyzing hidden import 'shapely.tests.test_measurement'
+116514 INFO: Analyzing hidden import 'shapely.tests.test_misc'
+116635 INFO: Analyzing hidden import 'shapely.tests.test_plotting'
+116644 INFO: Analyzing hidden import 'shapely.tests.test_predicates'
+116674 INFO: Analyzing hidden import 'shapely.tests.test_ragged_array'
+116709 INFO: Analyzing hidden import 'shapely.tests.test_set_operations'
+116752 INFO: Analyzing hidden import 'shapely.tests.test_strtree'
+116863 INFO: Analyzing hidden import 'shapely.tests.test_testing'
+116878 INFO: Analyzing hidden import 'pyogrio._geometry'
+116879 INFO: Analyzing hidden import 'pyogrio.tests'
+116879 INFO: Analyzing hidden import 'pyogrio.tests.conftest'
+116907 INFO: Analyzing hidden import 'pyogrio.tests.test_arrow'
+116980 INFO: Analyzing hidden import 'pyogrio.tests.test_core'
+117025 INFO: Analyzing hidden import 'pyogrio.tests.test_geopandas_io'
+117193 INFO: Analyzing hidden import 'pyogrio.tests.test_path'
+117215 INFO: Analyzing hidden import 'pyogrio.tests.test_raw_io'
+117301 INFO: Analyzing hidden import 'pyogrio.tests.test_util'
+117309 INFO: Analyzing hidden import 'geopandas.accessors'
+117319 INFO: Analyzing hidden import 'geopandas.conftest'
+117350 INFO: Analyzing hidden import 'geopandas.io.tests'
+117351 INFO: Analyzing hidden import 'geopandas.io.tests.generate_legacy_storage_files'
+117363 INFO: Analyzing hidden import 'geopandas.io.tests.test_arrow'
+117445 INFO: Analyzing hidden import 'geopandas.io.tests.test_file'
+117531 INFO: Analyzing hidden import 'geopandas.io.tests.test_file_geom_types_drivers'
+117539 INFO: Analyzing hidden import 'geopandas.io.tests.test_geoarrow'
+117602 INFO: Analyzing hidden import 'geopandas.io.tests.test_infer_schema'
+117627 INFO: Analyzing hidden import 'geopandas.io.tests.test_pickle'
+117634 INFO: Analyzing hidden import 'geopandas.io.tests.test_sql'
+117682 INFO: Analyzing hidden import 'geopandas.tests.test_api'
+117682 INFO: Analyzing hidden import 'geopandas.tests.test_array'
+117761 INFO: Analyzing hidden import 'geopandas.tests.test_compat'
+117767 INFO: Analyzing hidden import 'geopandas.tests.test_config'
+117776 INFO: Analyzing hidden import 'geopandas.tests.test_crs'
+117826 INFO: Analyzing hidden import 'geopandas.tests.test_datasets'
+117828 INFO: Analyzing hidden import 'geopandas.tests.test_decorator'
+117842 INFO: Analyzing hidden import 'geopandas.tests.test_dissolve'
+117870 INFO: Analyzing hidden import 'geopandas.tests.test_explore'
+117926 INFO: Analyzing hidden import 'geopandas.tests.test_extension_array'
+118292 INFO: Analyzing hidden import 'geopandas.tests.test_geocode'
+118312 INFO: Analyzing hidden import 'geopandas.tests.test_geodataframe'
+118435 INFO: Analyzing hidden import 'geopandas.tests.test_geom_methods'
+118557 INFO: Analyzing hidden import 'geopandas.tests.test_geoseries'
+118613 INFO: Analyzing hidden import 'geopandas.tests.test_merge'
+118636 INFO: Analyzing hidden import 'geopandas.tests.test_op_output_types'
+118667 INFO: Analyzing hidden import 'geopandas.tests.test_overlay'
+118716 INFO: Analyzing hidden import 'geopandas.tests.test_pandas_accessor'
+118728 INFO: Analyzing hidden import 'geopandas.tests.test_pandas_methods'
+118781 INFO: Analyzing hidden import 'geopandas.tests.test_plotting'
+119190 INFO: Analyzing hidden import 'geopandas.tests.test_show_versions'
+119194 INFO: Analyzing hidden import 'geopandas.tests.test_sindex'
+119244 INFO: Analyzing hidden import 'geopandas.tests.test_testing'
+119264 INFO: Analyzing hidden import 'geopandas.tests.test_types'
+119281 INFO: Analyzing hidden import 'geopandas.tools.tests'
+119282 INFO: Analyzing hidden import 'geopandas.tools.tests.test_clip'
+119314 INFO: Analyzing hidden import 'geopandas.tools.tests.test_hilbert_curve'
+119328 INFO: Analyzing hidden import 'geopandas.tools.tests.test_make_grid'
+119370 INFO: Analyzing hidden import 'geopandas.tools.tests.test_random'
+119385 INFO: Analyzing hidden import 'geopandas.tools.tests.test_sjoin'
+119465 INFO: Analyzing hidden import 'geopandas.tools.tests.test_tools'
+119477 INFO: Analyzing hidden import 'pyqtgraph.PlotData'
+119489 INFO: Analyzing hidden import 'pyqtgraph.configfile'
+119522 INFO: Analyzing hidden import 'pyqtgraph.dockarea'
+119625 INFO: Analyzing hidden import 'pyqtgraph.examples'
+119694 INFO: Analyzing hidden import 'pyqtgraph.examples.Arrow'
+119715 INFO: Analyzing hidden import 'pyqtgraph.examples.AxisItem_label_overlap'
+119730 INFO: Analyzing hidden import 'pyqtgraph.examples.BarGraphItem'
+119741 INFO: Analyzing hidden import 'pyqtgraph.examples.BoxplotItem'
+119757 INFO: Analyzing hidden import 'pyqtgraph.examples.CLIexample'
+119760 INFO: Analyzing hidden import 'pyqtgraph.examples.ColorBarItem'
+119834 INFO: Analyzing hidden import 'pyqtgraph.examples.ColorButton'
+119842 INFO: Analyzing hidden import 'pyqtgraph.examples.ColorGradientPlots'
+119863 INFO: Analyzing hidden import 'pyqtgraph.examples.ConsoleWidget'
+119873 INFO: Analyzing hidden import 'pyqtgraph.examples.CustomGraphItem'
+119889 INFO: Analyzing hidden import 'pyqtgraph.examples.DataSlicing'
+119900 INFO: Analyzing hidden import 'pyqtgraph.examples.DataTreeWidget'
+119912 INFO: Analyzing hidden import 'pyqtgraph.examples.DateAxisItem'
+119922 INFO: Analyzing hidden import 'pyqtgraph.examples.DateAxisItem_QtDesigner'
+119933 INFO: Analyzing hidden import 'pyqtgraph.examples.DiffTreeWidget'
+119933 INFO: Analyzing hidden import 'pyqtgraph.examples.Draw'
+119948 INFO: Analyzing hidden import 'pyqtgraph.examples.ErrorBarItem'
+119965 INFO: Analyzing hidden import 'pyqtgraph.examples.FillBetweenItem'
+119979 INFO: Analyzing hidden import 'pyqtgraph.examples.Flowchart'
+121595 INFO: Analyzing hidden import 'pyqtgraph.examples.FlowchartCustomNode'
+121605 INFO: Analyzing hidden import 'pyqtgraph.examples.GLBarGraphItem'
+121979 INFO: Analyzing hidden import 'pyqtgraph.examples.GLGradientLegendItem'
+121984 INFO: Analyzing hidden import 'pyqtgraph.examples.GLGraphItem'
+122000 INFO: Analyzing hidden import 'pyqtgraph.examples.GLImageItem'
+122012 INFO: Analyzing hidden import 'pyqtgraph.examples.GLIsosurface'
+122024 INFO: Analyzing hidden import 'pyqtgraph.examples.GLLinePlotItem'
+122035 INFO: Analyzing hidden import 'pyqtgraph.examples.GLMeshItem'
+122050 INFO: Analyzing hidden import 'pyqtgraph.examples.GLPainterItem'
+122059 INFO: Analyzing hidden import 'pyqtgraph.examples.GLScatterPlotItem'
+122081 INFO: Analyzing hidden import 'pyqtgraph.examples.GLSurfacePlot'
+122095 INFO: Analyzing hidden import 'pyqtgraph.examples.GLTextItem'
+122109 INFO: Analyzing hidden import 'pyqtgraph.examples.GLViewWidget'
+122116 INFO: Analyzing hidden import 'pyqtgraph.examples.GLVolumeItem'
+122126 INFO: Analyzing hidden import 'pyqtgraph.examples.GLshaders'
+122140 INFO: Analyzing hidden import 'pyqtgraph.examples.GradientEditor'
+122147 INFO: Analyzing hidden import 'pyqtgraph.examples.GradientWidget'
+122151 INFO: Analyzing hidden import 'pyqtgraph.examples.GraphItem'
+122151 INFO: Analyzing hidden import 'pyqtgraph.examples.GraphicsLayout'
+122167 INFO: Analyzing hidden import 'pyqtgraph.examples.GraphicsScene'
+122186 INFO: Analyzing hidden import 'pyqtgraph.examples.HistogramLUT'
+122199 INFO: Analyzing hidden import 'pyqtgraph.examples.ImageItem'
+122211 INFO: Analyzing hidden import 'pyqtgraph.examples.ImageView'
+122221 INFO: Analyzing hidden import 'pyqtgraph.examples.InfiniteLine'
+122230 INFO: Analyzing hidden import 'pyqtgraph.examples.InteractiveParameter'
+122246 INFO: Analyzing hidden import 'pyqtgraph.examples.JoystickButton'
+122256 INFO: Analyzing hidden import 'pyqtgraph.examples.Legend'
+122261 INFO: Analyzing hidden import 'pyqtgraph.examples.LogPlotTest'
+122278 INFO: Analyzing hidden import 'pyqtgraph.examples.MatrixDisplayExample'
+122284 INFO: Analyzing hidden import 'pyqtgraph.examples.MouseSelection'
+122296 INFO: Analyzing hidden import 'pyqtgraph.examples.MultiDataPlot'
+122308 INFO: Analyzing hidden import 'pyqtgraph.examples.MultiPlotSpeedTest'
+122331 INFO: Analyzing hidden import 'pyqtgraph.examples.MultiplePlotAxes'
+122341 INFO: Analyzing hidden import 'pyqtgraph.examples.NonUniformImage'
+122369 INFO: Analyzing hidden import 'pyqtgraph.examples.PColorMeshItem'
+122383 INFO: Analyzing hidden import 'pyqtgraph.examples.PanningPlot'
+122387 INFO: Analyzing hidden import 'pyqtgraph.examples.PlotAutoRange'
+122387 INFO: Analyzing hidden import 'pyqtgraph.examples.PlotSpeedTest'
+122420 INFO: Analyzing hidden import 'pyqtgraph.examples.PlotWidget'
+122435 INFO: Analyzing hidden import 'pyqtgraph.examples.Plotting'
+122450 INFO: Analyzing hidden import 'pyqtgraph.examples.ProgressDialog'
+122452 INFO: Analyzing hidden import 'pyqtgraph.examples.ROIExamples'
+122479 INFO: Analyzing hidden import 'pyqtgraph.examples.ROItypes'
+122494 INFO: Analyzing hidden import 'pyqtgraph.examples.RemoteGraphicsView'
+122504 INFO: Analyzing hidden import 'pyqtgraph.examples.RemoteSpeedTest'
+122510 INFO: Analyzing hidden import 'pyqtgraph.examples.RunExampleApp'
+122523 INFO: Analyzing hidden import 'pyqtgraph.examples.ScaleBar'
+122528 INFO: Analyzing hidden import 'pyqtgraph.examples.ScatterPlot'
+122548 INFO: Analyzing hidden import 'pyqtgraph.examples.ScatterPlotSpeedTest'
+122557 INFO: Analyzing hidden import 'pyqtgraph.examples.ScatterPlotWidget'
+122573 INFO: Analyzing hidden import 'pyqtgraph.examples.SimplePlot'
+122573 INFO: Analyzing hidden import 'pyqtgraph.examples.SpinBox'
+122589 INFO: Analyzing hidden import 'pyqtgraph.examples.Symbols'
+122605 INFO: Analyzing hidden import 'pyqtgraph.examples.TableWidget'
+122605 INFO: Analyzing hidden import 'pyqtgraph.examples.TreeWidget'
+122621 INFO: Analyzing hidden import 'pyqtgraph.examples.VideoSpeedTest'
+122653 INFO: Analyzing hidden import 'pyqtgraph.examples.VideoTemplate_generic'
+122690 INFO: Analyzing hidden import 'pyqtgraph.examples.ViewBox'
+122699 INFO: Analyzing hidden import 'pyqtgraph.examples.ViewBoxFeatures'
+122714 INFO: Analyzing hidden import 'pyqtgraph.examples.ViewLimits'
+122714 INFO: Analyzing hidden import 'pyqtgraph.examples.__main__'
+122730 INFO: Analyzing hidden import 'pyqtgraph.examples._buildParamTypes'
+122745 INFO: Analyzing hidden import 'pyqtgraph.examples._paramtreecfg'
+122746 INFO: Analyzing hidden import 'pyqtgraph.examples.beeswarm'
+122770 INFO: Analyzing hidden import 'pyqtgraph.examples.colorMaps'
+122776 INFO: Analyzing hidden import 'pyqtgraph.examples.colorMapsLinearized'
+122795 INFO: Analyzing hidden import 'pyqtgraph.examples.console_exception_inspection'
+122811 INFO: Analyzing hidden import 'pyqtgraph.examples.contextMenu'
+122823 INFO: Analyzing hidden import 'pyqtgraph.examples.crosshair'
+122823 INFO: Analyzing hidden import 'pyqtgraph.examples.customGraphicsItem'
+122846 INFO: Analyzing hidden import 'pyqtgraph.examples.customPlot'
+122862 INFO: Analyzing hidden import 'pyqtgraph.examples.designerExample'
+122873 INFO: Analyzing hidden import 'pyqtgraph.examples.dockarea'
+122889 INFO: Analyzing hidden import 'pyqtgraph.examples.exampleLoaderTemplate_generic'
+122901 INFO: Analyzing hidden import 'pyqtgraph.examples.fractal'
+122916 INFO: Analyzing hidden import 'pyqtgraph.examples.glow'
+122937 INFO: Analyzing hidden import 'pyqtgraph.examples.hdf5'
+122948 INFO: Analyzing hidden import 'pyqtgraph.examples.histogram'
+122967 INFO: Analyzing hidden import 'pyqtgraph.examples.imageAnalysis'
+122980 INFO: Analyzing hidden import 'pyqtgraph.examples.infiniteline_performance'
+122992 INFO: Analyzing hidden import 'pyqtgraph.examples.isocurve'
+123005 INFO: Analyzing hidden import 'pyqtgraph.examples.jupyter_console_example'
+123010 INFO: Analyzing hidden import 'pyqtgraph.examples.linkedViews'
+123026 INFO: Analyzing hidden import 'pyqtgraph.examples.logAxis'
+123042 INFO: Analyzing hidden import 'pyqtgraph.examples.multiplePlotSpeedTest'
+123053 INFO: Analyzing hidden import 'pyqtgraph.examples.multiprocess'
+123058 INFO: Analyzing hidden import 'pyqtgraph.examples.optics'
+123120 INFO: Analyzing hidden import 'pyqtgraph.examples.optics_demos'
+123136 INFO: Analyzing hidden import 'pyqtgraph.examples.parallelize'
+123147 INFO: Analyzing hidden import 'pyqtgraph.examples.parametertree'
+123168 INFO: Analyzing hidden import 'pyqtgraph.examples.relativity'
+123230 INFO: Analyzing hidden import 'pyqtgraph.examples.relativity_demo'
+123230 INFO: Analyzing hidden import 'pyqtgraph.examples.scrollingPlots'
+123260 INFO: Analyzing hidden import 'pyqtgraph.examples.syntax'
+123280 INFO: Analyzing hidden import 'pyqtgraph.examples.template'
+123288 INFO: Analyzing hidden import 'pyqtgraph.examples.test_examples'
+123323 INFO: Analyzing hidden import 'pyqtgraph.examples.text'
+123333 INFO: Analyzing hidden import 'pyqtgraph.examples.verlet_chain'
+123355 INFO: Analyzing hidden import 'pyqtgraph.examples.verlet_chain_demo'
+123385 INFO: Analyzing hidden import 'pyqtgraph.frozenSupport'
+123391 INFO: Analyzing hidden import 'pyqtgraph.multiprocess.bootstrap'
+123409 INFO: Analyzing hidden import 'pyqtgraph.util.garbage_collector'
+123419 INFO: Analyzing hidden import 'pyqtgraph.util.get_resolution'
+123427 INFO: Analyzing hidden import 'pyqtgraph.util.glinfo'
+123433 INFO: Analyzing hidden import 'qtawesome.icon_browser'
+123455 INFO: Analyzing hidden import 'ts_annotator.app'
+123465 INFO: Analyzing hidden import 'ts_annotator.app.config'
+123473 INFO: Analyzing hidden import 'ts_annotator.app.controller'
+123714 INFO: Analyzing hidden import 'ts_annotator.app.main'
+124120 INFO: Analyzing hidden import 'ts_annotator.ui.continuum_window'
+124188 INFO: Analyzing hidden import 'ts_annotator.ui.map_view'
+124196 INFO: Analyzing hidden import 'matplotlib._animation_data'
+124227 INFO: Analyzing hidden import 'matplotlib._internal_utils'
+124230 INFO: Analyzing hidden import 'matplotlib._type1font'
+124298 INFO: Analyzing hidden import 'matplotlib.animation'
+124374 INFO: Analyzing hidden import 'matplotlib.backends._backend_gtk'
+124401 INFO: Analyzing hidden import 'matplotlib.backends._backend_pdf_ps'
+129271 INFO: Analyzing hidden import 'matplotlib.backends._backend_tk'
+129390 INFO: Analyzing hidden import 'matplotlib.backends.backend_cairo'
+129433 INFO: Analyzing hidden import 'matplotlib.backends.backend_gtk3'
+129469 INFO: Analyzing hidden import 'matplotlib.backends.backend_gtk3agg'
+129482 INFO: Analyzing hidden import 'matplotlib.backends.backend_gtk3cairo'
+129486 INFO: Analyzing hidden import 'matplotlib.backends.backend_gtk4'
+129525 INFO: Analyzing hidden import 'matplotlib.backends.backend_gtk4agg'
+129535 INFO: Analyzing hidden import 'matplotlib.backends.backend_gtk4cairo'
+129541 INFO: Analyzing hidden import 'matplotlib.backends.backend_macosx'
+129550 INFO: Analyzing hidden import 'matplotlib.backends.backend_mixed'
+129557 INFO: Analyzing hidden import 'matplotlib.backends.backend_nbagg'
+129609 INFO: Analyzing hidden import 'matplotlib.backends.backend_pdf'
+129732 INFO: Analyzing hidden import 'matplotlib.backends.backend_pgf'
+129777 INFO: Analyzing hidden import 'matplotlib.backends.backend_ps'
+129857 INFO: Analyzing hidden import 'matplotlib.backends.backend_qt5'
+129869 INFO: Analyzing hidden import 'matplotlib.backends.backend_qt5agg'
+129869 INFO: Analyzing hidden import 'matplotlib.backends.backend_qt5cairo'
+129899 INFO: Processing standard module hook 'hook-matplotlib.backends.backend_qtcairo.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+129901 INFO: Analyzing hidden import 'matplotlib.backends.backend_svg'
+129988 INFO: Analyzing hidden import 'matplotlib.backends.backend_template'
+129995 INFO: Analyzing hidden import 'matplotlib.backends.backend_tkagg'
+129995 INFO: Analyzing hidden import 'matplotlib.backends.backend_tkcairo'
+130011 INFO: Analyzing hidden import 'matplotlib.backends.backend_webagg'
+130026 INFO: Analyzing hidden import 'matplotlib.backends.backend_wx'
+130105 INFO: Analyzing hidden import 'matplotlib.backends.backend_wxagg'
+130121 INFO: Analyzing hidden import 'matplotlib.backends.backend_wxcairo'
+130130 INFO: Analyzing hidden import 'matplotlib.pylab'
+130137 INFO: Analyzing hidden import 'matplotlib.sankey'
+130184 INFO: Analyzing hidden import 'matplotlib.sphinxext'
+130185 INFO: Analyzing hidden import 'matplotlib.sphinxext.figmpl_directive'
+130198 INFO: Analyzing hidden import 'matplotlib.sphinxext.mathmpl'
+130214 INFO: Analyzing hidden import 'matplotlib.sphinxext.plot_directive'
+130245 INFO: Analyzing hidden import 'matplotlib.sphinxext.roles'
+130245 INFO: Analyzing hidden import 'matplotlib.testing._markers'
+130260 INFO: Analyzing hidden import 'matplotlib.testing.conftest'
+130261 INFO: Analyzing hidden import 'matplotlib.testing.jpl_units'
+130341 INFO: Analyzing hidden import 'matplotlib.testing.widgets'
+130341 INFO: Processing module hooks (post-graph stage)...
+130629 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+130630 INFO: Matplotlib backend selection method: automatic discovery of used backends
+130689 INFO: Discovered Matplotlib backend(s) via `matplotlib.use()` call in module 'geopandas.tests.test_plotting': 
+['Agg']
+130689 INFO: The following Matplotlib backends were discovered by scanning for `matplotlib.use()` calls: ['Agg']. If 
+your backend of choice is not in this list, either add a `matplotlib.use()` call to your code, or configure the 
+backend collection via hook options (see: https://pyinstaller.org/en/stable/hooks-config.html#matplotlib-hooks).
+131067 INFO: Selected matplotlib backends: ['Agg']
+131067 INFO: Extra dists for selected matplotlib backends: []
+132112 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+138807 WARNING: Hidden import "scipy.special._cdflib" not found!
+138968 INFO: Processing standard module hook 'hook-tzdata.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+104 WARNING: Assuming this is not an Anaconda environment or an additional venv/pipenv/... environment manager is 
+being used on top, because the conda-meta folder D:\ENV\navigator\conda-meta does not exist.
+139605 INFO: Performing binary vs. data reclassification (2738 entries)
+149584 INFO: Looking for ctypes DLLs
+149773 INFO: Analyzing run-time hooks ...
+149787 INFO: Including run-time hook 'pyi_rth_pyqt6.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+149788 INFO: Processing pre-find-module-path hook 'hook-_pyi_rth_utils.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+149791 INFO: Processing standard module hook 'hook-_pyi_rth_utils.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks'
+149795 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+149798 INFO: Including run-time hook 'pyi_rth_inspect.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+149801 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+149803 INFO: Including run-time hook 'pyi_rth_setuptools.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+149804 INFO: Including run-time hook 'pyi_rth_mplconfig.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+149807 INFO: Including run-time hook 'pyi_rth_pyqtgraph_multiprocess.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
+149807 INFO: Including run-time hook 'pyi_rth_pyproj.py' from 
+'D:\\ENV\\navigator\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
+149934 INFO: Creating base_library.zip...
+149980 INFO: Looking for dynamic libraries
+154569 INFO: Extra DLL search directories (AddDllDirectory): 
+['D:\\ENV\\navigator\\Lib\\site-packages\\PyQt6\\Qt6\\bin', 'D:\\ENV\\navigator\\Lib\\site-packages\\numpy.libs', 
+'D:\\ENV\\navigator\\Lib\\site-packages\\pandas.libs', 'D:\\ENV\\navigator\\Lib\\site-packages\\scipy.libs', 
+'D:\\ENV\\navigator\\Lib\\site-packages\\shapely.libs', 'D:\\ENV\\navigator\\Lib\\site-packages\\pyproj.libs', 
+'D:\\ENV\\navigator\\Lib\\site-packages\\pyogrio.libs', 'D:\\ENV\\navigator\\Lib\\site-packages\\rasterio.libs']
+154569 INFO: Extra DLL search directories (PATH): ['D:\\ENV\\navigator\\Lib\\site-packages\\PyQt6\\Qt6\\bin']
+159987 WARNING: Library not found: could not resolve 'liblzma.dll', dependency of 
+'C:\\Users\\Admin-2\\anaconda3\\DLLs\\_lzma.pyd'.
+159989 WARNING: Library not found: could not resolve 'LIBBZ2.dll', dependency of 
+'C:\\Users\\Admin-2\\anaconda3\\DLLs\\_bz2.pyd'.
+159989 WARNING: Library not found: could not resolve 'libcrypto-3-x64.dll', dependency of 
+'C:\\Users\\Admin-2\\anaconda3\\DLLs\\_hashlib.pyd'.
+159989 WARNING: Library not found: could not resolve 'ffi.dll', dependency of 
+'C:\\Users\\Admin-2\\anaconda3\\DLLs\\_ctypes.pyd'.
+159989 WARNING: Library not found: could not resolve 'libcrypto-3-x64.dll', dependency of 
+'C:\\Users\\Admin-2\\anaconda3\\DLLs\\_ssl.pyd'.
+159989 WARNING: Library not found: could not resolve 'libssl-3-x64.dll', dependency of 
+'C:\\Users\\Admin-2\\anaconda3\\DLLs\\_ssl.pyd'.
+159989 WARNING: Library not found: could not resolve 'libexpat.dll', dependency of 
+'C:\\Users\\Admin-2\\anaconda3\\DLLs\\pyexpat.pyd'.
+159989 WARNING: Library not found: could not resolve 'sqlite3.dll', dependency of 
+'C:\\Users\\Admin-2\\anaconda3\\DLLs\\_sqlite3.pyd'.
+160083 INFO: Warnings written to D:\NAVIGATOR\build\work\cycle-navigator\warn-cycle-navigator.txt
+160385 INFO: Graph cross-reference written to D:\NAVIGATOR\build\work\cycle-navigator\xref-cycle-navigator.html
+160573 INFO: checking PYZ
+160573 INFO: Building PYZ because PYZ-00.toc is non existent
+160573 INFO: Building PYZ (ZlibArchive) D:\NAVIGATOR\build\work\cycle-navigator\PYZ-00.pyz
+163043 INFO: Building PYZ (ZlibArchive) D:\NAVIGATOR\build\work\cycle-navigator\PYZ-00.pyz completed successfully.
+163128 INFO: checking PKG
+163128 INFO: Building PKG because PKG-00.toc is non existent
+163128 INFO: Building PKG (CArchive) cycle-navigator.pkg
+163168 INFO: Building PKG (CArchive) cycle-navigator.pkg completed successfully.
+163168 INFO: Bootloader D:\ENV\navigator\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\run.exe
+163168 INFO: checking EXE
+163168 INFO: Building EXE because EXE-00.toc is non existent
+163168 INFO: Building EXE from EXE-00.toc
+163168 INFO: Copying bootloader EXE to D:\NAVIGATOR\build\work\cycle-navigator\cycle-navigator.exe
+163246 INFO: Copying icon to EXE
+163291 INFO: Copying 0 resources to EXE
+163292 INFO: Embedding manifest in EXE
+163327 INFO: Appending PKG archive to EXE
+163414 INFO: Fixing EXE headers
+163770 INFO: Building EXE from EXE-00.toc completed successfully.
+163802 INFO: checking COLLECT
+163802 INFO: Building COLLECT because COLLECT-00.toc is non existent
+163802 INFO: Building COLLECT COLLECT-00.toc
+167640 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+167732 INFO: Build complete! The results are available in: D:\NAVIGATOR\build\dist

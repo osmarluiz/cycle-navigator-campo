@@ -1,9 +1,14 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
-build/
-dist/
+/build/lib/
+/build/bdist*/
+/dist/
 .pytest_cache/
 .venv/
 # a configuracao e' de cada maquina; so' o exemplo vai versionado
 cycle-navigator.toml
+
+# saida do PyInstaller
+build/dist/
+build/work/
