@@ -30,7 +30,8 @@ if (-not $SoDados) {
     $art = Join-Path (Split-Path $Dist -Parent) "..\artefatos"
     if (Test-Path $art) {
         Write-Output "== .app do Mac (tar.gz) =="
-        Get-ChildItem $art -Filter "*.tar.gz" | ForEach-Object {
+        # o gh run download poe cada artefato numa subpasta com o nome dele: por isso -Recurse
+        Get-ChildItem $art -Recurse -Filter "*.tar.gz" | ForEach-Object {
             Copy-Item $_.FullName (Join-Path $Destino $_.Name) -Force
             Write-Output ("   {0}  {1:N0} MB" -f $_.Name, ($_.Length / 1MB))
         }
