@@ -16,8 +16,11 @@ a = Analysis(["launcher.py"], pathex=["../src"], binaries=binaries, datas=datas,
              excludes=["torch", "tkinter", "PyQt5", "PySide6", "IPython", "notebook", "scipy.spatial.cKDTree"],
              noarchive=False)
 pyz = PYZ(a.pure)
+# console=False: sem a janela preta de terminal atras do programa. O log vai para
+# cycle-navigator.log ao lado do executavel (ver launcher.py) -- e' isso que se pede ao aluno
+# quando algo der errado em campo.
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="cycle-navigator",
-          debug=False, strip=False, upx=False, console=True)
+          debug=False, strip=False, upx=False, console=False)
 coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name="CycleNavigator")
 
 # No Mac o resultado vira um .app de verdade (clicavel no Finder); no Windows/Linux fica a pasta.

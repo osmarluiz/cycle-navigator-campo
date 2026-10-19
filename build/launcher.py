@@ -14,8 +14,21 @@ def main():
     if "--config" not in argv and toml.exists():
         argv = ["--config", str(toml)] + argv
     os.chdir(exe_dir)
-    from cycle_navigator.app import main as app_main
-    return app_main(argv)
+    # Sem console (ver o .spec), o log precisa de um lugar: um arquivo ao lado do executavel,
+    # reescrito a cada abertura. E' o que se pede ao aluno quando algo der errado em campo.
+    import logging
+    try:
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s",
+                            filename=str(exe_dir / "cycle-navigator.log"), filemode="w",
+                            encoding="utf-8")
+    except OSError:
+        logging.basicConfig(level=logging.INFO)     # pasta somente-leitura: segue sem arquivo
+    try:
+        from cycle_navigator.app import main as app_main
+        return app_main(argv)
+    except Exception:
+        logging.exception("o programa fechou com erro")
+        raise
 
 
 if __name__ == "__main__":
