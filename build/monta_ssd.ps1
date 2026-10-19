@@ -1,0 +1,49 @@
+# Monta o pacote de campo num SSD externo: executavel + dados + config com caminho RELATIVO.
+#
+#   .\build\monta_ssd.ps1 -Destino "E:\CycleNavigator"            # Windows (usa build\dist)
+#   .\build\monta_ssd.ps1 -Destino "E:\CycleNavigator" -SoDados   # so' os dados (p/ Mac, que tem o .app proprio)
+#
+# Layout no SSD:
+#   CycleNavigator\
+#     cycle-navigator.exe (+ DLLs)     <- build\dist\CycleNavigator (Windows)
+#     CycleNavigator.app               <- artefato macOS do GitHub, copiado a' mao
+#     cycle-navigator.toml             <- aoi = "dados"  (relativo: vale em qualquer letra de drive)
+#     dados\cube, input, products, car, sam, pontos
+#
+# ⚠️ robocopy com /J (I/O sem buffer) e /MT: sao ~284 GB. Reexecutar so' copia o que mudou.
+param(
+    [Parameter(Mandatory = $true)][string]$Destino,
+    [string]$Dados = "F:\sits_aoi_crop",
+    [string]$Dist = "D:\NAVIGATOR\build\dist\CycleNavigator",
+    [switch]$SoDados
+)
+$ErrorActionPreference = "Stop"
+New-Item -ItemType Directory -Force -Path $Destino | Out-Null
+
+if (-not $SoDados) {
+    if (-not (Test-Path "$Dist\cycle-navigator.exe")) { throw "executavel nao encontrado em $Dist (rode o PyInstaller antes)" }
+    Write-Output "== executavel =="
+    robocopy $Dist $Destino /E /J /MT:8 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "robocopy do executavel falhou ($LASTEXITCODE)" }
+}
+
+Write-Output "== dados (pode levar uma hora num SSD USB 3) =="
+foreach ($sub in @("cube", "input", "products", "car", "sam", "pontos")) {
+    $o = Join-Path $Dados $sub
+    if (-not (Test-Path $o)) { Write-Output "   (sem $sub, pulando)"; continue }
+    # ⚠️ NAO leva os zips brutos do SICAR (907 MB) nem as partes do SAM: so' o recorte final
+    robocopy $o (Join-Path $Destino "dados\$sub") /E /J /MT:8 /NFL /NDL /NJH /NJS /NP /XF *.zip /XD partes | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "robocopy de $sub falhou ($LASTEXITCODE)" }
+    $gb = [math]::Round((Get-ChildItem (Join-Path $Destino "dados\$sub") -Recurse -File | Measure-Object Length -Sum).Sum / 1GB, 1)
+    Write-Output ("   {0,-9} {1,7} GB" -f $sub, $gb)
+}
+
+# config com caminho relativo: o mesmo arquivo vale no Windows (E:\) e no Mac (/Volumes/...)
+$toml = Get-Content "D:\NAVIGATOR\cycle-navigator.toml" -Raw
+$toml = $toml -replace 'aoi\s*=\s*"[^"]*"', 'aoi = "dados"'
+$toml = $toml -replace '(?m)^\s*car\s*=.*$', ''
+[System.IO.File]::WriteAllText((Join-Path $Destino "cycle-navigator.toml"), $toml, (New-Object System.Text.UTF8Encoding $false))
+
+$tot = [math]::Round((Get-ChildItem $Destino -Recurse -File | Measure-Object Length -Sum).Sum / 1GB, 1)
+Write-Output "== pronto: $Destino ($tot GB) =="
+Write-Output "   Windows: abra cycle-navigator.exe.  Mac: copie o CycleNavigator.app (artefato do GitHub) para esta pasta."
