@@ -262,12 +262,31 @@ class JanelaCampo(QMainWindow):
             QShortcut(QKeySequence(k), self).activated.connect(self.confirmou)
         QShortcut(QKeySequence(Qt.Key.Key_Backspace), self).activated.connect(self.desfezVertice)
 
-    def closeEvent(self, ev):
-        # ⚠️ o TiledMapView tem threads de leitura de tiles que so' param se alguem mandar; ele mesmo
-        # avisa que o closeEvent dele nunca dispara (vive num splitter). Sem isto, fechar a janela
-        # deixa "wrapped C/C++ object ... has been deleted" no log e, no pior caso, trava a saida.
+    def para_threads(self):
+        """Para as threads de tiles do mapa e ESPERA elas acabarem.
+
+        ⚠️⚠️ O `stop()` do TiledMapView espera 2 s e desiste. Depois de passar meses com as setas,
+        ha' centenas de leituras de tile enfileiradas, a thread ainda esta' lendo quando o Qt
+        destroi os objetos, e o Qt aborta o processo inteiro ("QThread: Destroyed while thread is
+        still running" -> qFatal -> 0xC0000409). Para quem usa, e' o programa "parando de funcionar"
+        ao fechar. Aqui se espera o tempo que for preciso: fechar demorar alguns segundos e'
+        aceitavel; fechar com crash nao e'.
+        """
+        if getattr(self, "_parou", False):
+            return
+        self._parou = True
         try:
             self.view.stop()
         except Exception:
             pass
+        for th in (getattr(self.view, "_thread", None), getattr(self.view, "_ov_thread", None)):
+            try:
+                if th is not None and th.isRunning():
+                    th.quit()
+                    th.wait()              # sem limite: ate' a thread terminar de verdade
+            except Exception:
+                pass
+
+    def closeEvent(self, ev):
+        self.para_threads()
         super().closeEvent(ev)

@@ -168,20 +168,13 @@ def monta(cfg):
     return classe, bases, ndvi, cinz, pivos, cult, lut
 
 
-def main(argv=None):
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
-    ap = argparse.ArgumentParser(prog="cycle-navigator", description=__doc__.splitlines()[0])
-    ap.add_argument("--config", help="caminho do .toml; se omitido, procura os lugares de sempre")
-    args = ap.parse_args(argv)
-    try:
-        cfg = carrega(args.config)
-    except ConfiguracaoAusente as e:                # erro de uso, nao defeito: sem stack trace
-        print(f"\n{e}\n", file=sys.stderr)
-        return 2
-    log.info("configuration: %s", cfg.origem)
+def monta_app(cfg, app):
+    """Monta a janela inteira e devolve o contexto (janela, camadas, handlers).
 
-    app = QApplication(sys.argv[:1])
-    estilo.aplica(app)
+    ⚠️ Separado de main() para o FLUXO REAL ser testavel: clicar, ligar camadas, adotar, trocar de
+    modo. Um crash nativo do Qt (abort em C++) nao vira excecao Python -- so' aparece rodando o
+    fluxo de verdade, e com isto da' para rodar num subprocesso e ler o codigo de saida.
+    """
     classe, bases, ndvi, cinz, pivos, cult, lut = monta(cfg)
 
     safras = list(cfg.safras)
@@ -583,7 +576,35 @@ def main(argv=None):
     usa_camada(CAMADAS_MES[0])
     if cam_car is not None:
         cam_car.visivel(win.barra.bt_car.isChecked())     # aparece desde a abertura
-    win.show()
+    # rede de seguranca: se o processo for encerrado por outro caminho que nao o X da janela
+    # (sys.exit, excecao no event loop), as threads do mapa ainda sao paradas antes do teardown.
+    app.aboutToQuit.connect(win.para_threads)
+
+    import types
+    return types.SimpleNamespace(
+        win=win, view=view, estado=estado, cadastro=cadastro, tabs=tabs,
+        p_ciclo=p_ciclo, p_pontos=p_pontos, cam_car=cam_car, cam_sam=cam_sam, camadas=camadas,
+        desenho=desenho, ao_clicar=ao_clicar, ao_gravar=ao_gravar, usa_modo=usa_modo,
+        usa_safra=usa_safra, usa_camada=usa_camada, usa_data=usa_data, confirma=confirma,
+        cancela=cancela, no_clique=no_clique, aviso_car=aviso_car)
+
+
+def main(argv=None):
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    ap = argparse.ArgumentParser(prog="cycle-navigator", description=__doc__.splitlines()[0])
+    ap.add_argument("--config", help="caminho do .toml; se omitido, procura os lugares de sempre")
+    args = ap.parse_args(argv)
+    try:
+        cfg = carrega(args.config)
+    except ConfiguracaoAusente as e:                # erro de uso, nao defeito: sem stack trace
+        print(f"\n{e}\n", file=sys.stderr)
+        return 2
+    log.info("configuration: %s", cfg.origem)
+
+    app = QApplication(sys.argv[:1])
+    estilo.aplica(app)
+    ctx = monta_app(cfg, app)
+    ctx.win.show()
     return app.exec()
 
 
