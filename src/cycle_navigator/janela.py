@@ -31,10 +31,10 @@ log = logging.getLogger(__name__)
 IDENTIFICAR, DESENHAR, EDITAR = "identificar", "desenhar", "editar"
 DICA = {
     IDENTIFICAR: "clique num talhão para ver o ciclo do ano",
-    DESENHAR: "dentro de um imóvel do CAR: parte do contorno dele · fora: clique põe vértice · "
-              "duplo-clique fecha · Esc cancela",
-    EDITAR: "clique numa fazenda para mover os vértices · num imóvel do CAR (ocre) para adotá-lo "
-            "e editar · duplo-clique abre o cadastro · Esc sai",
+    DESENHAR: "dentro de um imóvel do CAR ou talhão do SAM: parte do contorno dele · fora: clique "
+              "põe vértice · duplo-clique fecha · Esc cancela",
+    EDITAR: "clique numa fazenda para mover os vértices · num imóvel do CAR (ocre) ou talhão do "
+            "SAM (azul) para adotá-lo · duplo-clique abre o cadastro · Esc sai",
 }
 
 
@@ -60,6 +60,7 @@ class BarraTopo(QWidget):
     abrirTabela = pyqtSignal()
     exportar = pyqtSignal()
     carToggled = pyqtSignal(bool)
+    samToggled = pyqtSignal(bool)
 
     def __init__(self, safras, camadas, parent=None):
         super().__init__(parent)
@@ -153,6 +154,17 @@ class BarraTopo(QWidget):
         self.bt_car.toggled.connect(self.carToggled)
         self.bt_car.hide()           # so' aparece se a camada carregou
         l2.addWidget(self.bt_car)
+        self.bt_sam = QPushButton("SAM")
+        self.bt_sam.setObjectName("modo")
+        self.bt_sam.setCheckable(True)
+        self.bt_sam.setChecked(False)
+        self.bt_sam.setToolTip("mostrar os talhões segmentados automaticamente (linhas azuis). "
+                               "Editar: clicar num deles o adota; Desenhar: parte do contorno dele")
+        self.bt_sam.setIcon(qta.icon("mdi6.vector-selection", color=estilo.TEXT, color_on=estilo.ON_ACCENT))
+        self.bt_sam.setIconSize(QSize(18, 18))
+        self.bt_sam.toggled.connect(self.samToggled)
+        self.bt_sam.hide()
+        l2.addWidget(self.bt_sam)
 
         l2.addStretch(1)
         self.dica = QLabel(DICA[IDENTIFICAR])
@@ -249,3 +261,13 @@ class JanelaCampo(QMainWindow):
         for k in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             QShortcut(QKeySequence(k), self).activated.connect(self.confirmou)
         QShortcut(QKeySequence(Qt.Key.Key_Backspace), self).activated.connect(self.desfezVertice)
+
+    def closeEvent(self, ev):
+        # ⚠️ o TiledMapView tem threads de leitura de tiles que so' param se alguem mandar; ele mesmo
+        # avisa que o closeEvent dele nunca dispara (vive num splitter). Sem isto, fechar a janela
+        # deixa "wrapped C/C++ object ... has been deleted" no log e, no pior caso, trava a saida.
+        try:
+            self.view.stop()
+        except Exception:
+            pass
+        super().closeEvent(ev)

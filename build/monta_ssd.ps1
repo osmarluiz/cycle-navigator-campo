@@ -31,8 +31,8 @@ Write-Output "== dados (pode levar uma hora num SSD USB 3) =="
 foreach ($sub in @("cube", "input", "products", "car", "sam", "pontos")) {
     $o = Join-Path $Dados $sub
     if (-not (Test-Path $o)) { Write-Output "   (sem $sub, pulando)"; continue }
-    # ⚠️ NAO leva os zips brutos do SICAR (907 MB) nem as partes do SAM: so' o recorte final
-    robocopy $o (Join-Path $Destino "dados\$sub") /E /J /MT:8 /NFL /NDL /NJH /NJS /NP /XF *.zip /XD partes | Out-Null
+    # ⚠️ NAO leva os zips brutos do SICAR (907 MB), as partes do SAM nem o SAM bruto: so' o final
+    robocopy $o (Join-Path $Destino "dados\$sub") /E /J /MT:8 /NFL /NDL /NJH /NJS /NP /XF *.zip *_bruto.gpkg /XD partes | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy de $sub falhou ($LASTEXITCODE)" }
     $gb = [math]::Round((Get-ChildItem (Join-Path $Destino "dados\$sub") -Recurse -File | Measure-Object Length -Sum).Sum / 1GB, 1)
     Write-Output ("   {0,-9} {1,7} GB" -f $sub, $gb)

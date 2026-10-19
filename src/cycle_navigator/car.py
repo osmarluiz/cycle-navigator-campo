@@ -38,22 +38,32 @@ COR = "#e0b84a"
 
 
 class CamadaCAR:
-    def __init__(self, view, caminho, transform, crs):
+    """Camada de poligonos de referencia. Nasceu para o CAR; o SAM usa a mesma classe com outra
+    cor, outro cartao e outros campos herdados pela fazenda (`html` e `dados`)."""
+
+    def __init__(self, view, caminho, transform, crs, cor=None, cor_sel="#ffd166",
+                 titulo="Imóvel do CAR", html=None, dados=None):
         self.view = view
+        self.cor = cor or COR
+        self.titulo = titulo
+        self._html_fn = html            # (atributos, area_medida) -> html; None = cartao do CAR
+        self.dados = dados or dados_do_car   # atributos -> campos que a fazenda guarda
         self.ok = False
         self.n = 0
         self._visivel = False
         self.escondida = False     # True quando nem a versao simplificada cabe no orcamento
         self.simplificada = False  # True quando a vista esta' usando o nivel de detalhe reduzido
         self.em_vista = 0
-        self._linha = pg.PlotDataItem(pen=pg.mkPen(COR, width=1.4, style=pg.QtCore.Qt.PenStyle.DashLine))
+        self._linha = pg.PlotDataItem(pen=pg.mkPen(self.cor, width=1.4,
+                                                style=pg.QtCore.Qt.PenStyle.DashLine))
         self._linha.setZValue(12)
         view.vb.addItem(self._linha)
         # ⚠️ SELECAO = contorno grosso + preenchimento + cartao. Inspecionar um imovel nao pode exigir
         # mudar de modo nem adota-lo: a pessoa so' quer saber o que o CAR diz daquele pedaco.
         self._sel = QGraphicsPolygonItem()
-        self._sel.setPen(pg.mkPen("#ffd166", width=3))
-        self._sel.setBrush(pg.mkBrush(255, 209, 102, 55))
+        self._sel.setPen(pg.mkPen(cor_sel, width=3))
+        c = pg.mkColor(cor_sel); c.setAlpha(55)
+        self._sel.setBrush(pg.mkBrush(c))
         self._sel.setZValue(14)
         self._sel.hide()
         view.vb.addItem(self._sel)
@@ -115,7 +125,7 @@ class CamadaCAR:
         self.tree = STRtree(self.polys)
         self.n = len(self.polys)
         self.ok = self.n > 0
-        log.info("CAR: %d imoveis carregados de %s", self.n, caminho)
+        log.info("%s: %d poligonos carregados de %s", self.titulo, self.n, caminho)
 
     # ---------- desenho ----------
     def visivel(self, on):
@@ -145,8 +155,10 @@ class CamadaCAR:
         self.selecionado = None
 
     def _html(self, a, area_medida):
+        if self._html_fn is not None:
+            return self._html_fn(a, area_medida)
         d = dados_do_car(a)
-        linhas = [f"<div style='font-size:13px;font-weight:600;margin-bottom:4px'>Imóvel do CAR</div>",
+        linhas = [f"<div style='font-size:13px;font-weight:600;margin-bottom:4px'>{self.titulo}</div>",
                   f"<div style='color:#a9ac9c;font-size:11px;margin-bottom:6px'>{d['car']}</div>"]
 
         def row(k, v):
@@ -268,3 +280,28 @@ def resumo(a):
         except (TypeError, ValueError):
             pass
     return " · ".join(p for p in partes if p)
+
+
+# ==================================================================== SAM
+COR_SAM = "#7fd3ff"
+
+
+def dados_do_sam(a):
+    """O que a fazenda guarda quando o contorno veio do SAM: o id do talhao e a confianca do modelo."""
+    if not a:
+        return {}
+    return {"sam_id": int(a.get("id") or 0),
+            "sam_iou": round(float(a.get("iou") or 0), 3),
+            "sam_estab": round(float(a.get("estab") or 0), 3)}
+
+
+def html_sam(a, area_medida):
+    d = dados_do_sam(a)
+    area = f"{(area_medida or float(a.get('area_ha') or 0)):,.1f}".replace(",", ".")
+    return ("<div style='font-size:13px;font-weight:600;margin-bottom:4px'>Talhão (SAM)</div>"
+            f"<div style='color:#a9ac9c;font-size:11px;margin-bottom:6px'>segmento #{d['sam_id']}</div>"
+            f"<div><span style='color:#a9ac9c'>Área</span>&nbsp; <b>{area}</b> ha</div>"
+            f"<div><span style='color:#a9ac9c'>Confiança do modelo</span>&nbsp; IoU {d['sam_iou']:.2f} · "
+            f"estabilidade {d['sam_estab']:.2f}</div>"
+            "<div style='color:#767a6c;font-size:11px;margin-top:6px'>contorno automático: confira as "
+            "bordas antes de adotar · Editar fazenda → clique nele · Esc limpa</div>")

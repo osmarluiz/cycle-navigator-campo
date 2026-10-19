@@ -84,6 +84,7 @@ class Config:
     pivos: Path = None
     predicao: Path = None
     car: Path = None          # perimetros do CAR recortados ao AOI (opcional)
+    sam: Path = None          # talhoes pre-segmentados pelo SAM (opcional)
     origem: Path = None
     classes: dict = field(default_factory=lambda: dict(CLASSES_PADRAO))
     _faltando: list = field(default_factory=list)
@@ -176,6 +177,7 @@ def carrega(explicito=None):
 
     cfg = Config(aoi=_cam("aoi"), meses=list(d["meses"]),
                  pivos=_cam("pivos"), predicao=_cam("predicao"), car=_cam("car"),
+                 sam=_cam("sam"),
                  classes=dict(d["classes"]) if d.get("classes") else dict(CLASSES_PADRAO),
                  origem=p)
     # ⚠️ um ano-safra INCOMPLETO nao serve: a leitura fenometrica compara o ciclo com o ano inteiro,
@@ -190,6 +192,8 @@ def carrega(explicito=None):
     # CAR: se nao foi declarado, usa o padrao do recorte quando ele existir; nunca e' obrigatorio
     if cfg.car is None and (cfg.aoi / "car" / "car_aoi.gpkg").exists():
         cfg.car = cfg.aoi / "car" / "car_aoi.gpkg"
+    if cfg.sam is None and (cfg.aoi / "sam" / "sam_aoi.gpkg").exists():
+        cfg.sam = cfg.aoi / "sam" / "sam_aoi.gpkg"
     if cfg._faltando:
         raise ConfiguracaoAusente(
             f"{p}: {len(cfg._faltando)} arquivo(s) declarado(s) nao existem, a comecar por\n"

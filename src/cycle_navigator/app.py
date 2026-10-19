@@ -30,7 +30,8 @@ from .ciclos import PainelCiclo
 from .config import ConfiguracaoAusente, carrega
 from . import estilo
 from . import exporta
-from .car import CamadaCAR, dados_do_car, resumo as resumo_car
+from .car import (COR_SAM, CamadaCAR, dados_do_car, dados_do_sam, html_sam,
+                  resumo as resumo_car)
 from .fazendas import CadastroFazendas, CamadaFazendas, DesenhoPoligono, DialogoFazenda
 from .janela import DESENHAR, EDITAR, IDENTIFICAR, JanelaCampo
 from .pontos import CamadaPontos, PainelPontos, abre_store
@@ -232,9 +233,30 @@ def main(argv=None):
         log.info("CAR: %d imoveis como referencia", cam_car.n)
     else:
         cam_car = None
+    cam_sam = (CamadaCAR(view, cfg.sam, classe.transform, classe.crs, cor=COR_SAM,
+                         cor_sel="#9fe0ff", titulo="Talhão (SAM)", html=html_sam,
+                         dados=dados_do_sam) if cfg.sam else None)
+    if cam_sam is not None and cam_sam.ok:
+        win.barra.bt_sam.show()
+        win.barra.samToggled.connect(cam_sam.visivel)
+        view.vb.sigRangeChanged.connect(cam_sam.redesenha)
+        log.info("SAM: %d talhoes como referencia", cam_sam.n)
+    else:
+        cam_sam = None
+    # as camadas de contorno, na ordem de prioridade do clique: CAR primeiro, depois SAM
+    camadas = [c for c in (cam_car, cam_sam) if c is not None]
+
+    def sob_o_clique(row, col):
+        """(camada, indice) do poligono visivel sob o pixel, ou (None, None)."""
+        for cam in camadas:
+            if cam._visivel:
+                i = cam.em_idx(row, col)
+                if i is not None:
+                    return cam, i
+        return None, None
     tabs.fazendas.lista(cadastro)
     estado = {"safra": safra, "modo": IDENTIFICAR, "mes": None, "camada": CAMADAS_MES[0],
-              "car_semente": ""}
+              "car_semente": "", "semente_dados": {}}
     _fontes = {}
 
     # ---------------- camadas ----------------
@@ -290,7 +312,7 @@ def main(argv=None):
         if estado["modo"] == DESENHAR and m != DESENHAR:
             desenho.cancela(); cam_faz.oculto = None; cam_faz.redesenha()
         estado["modo"] = m
-        estado["car_semente"] = semente[1] if semente else None
+        estado["semente_dados"] = dict(semente[1]) if semente else {}
         win.barra.mostra_modo(m)
         if cam_car is not None:
             aviso_car()
@@ -313,7 +335,7 @@ def main(argv=None):
         if len(pts) < 3:
             return
         fid = desenho.editando
-        extra = dados_do_car(estado.get("car_semente"))
+        extra = dict(estado.get("semente_dados") or {})
         desenho.cancela()
         cam_faz.oculto = None
         f = cadastro.salva(fid, pts, extra or None)
@@ -328,8 +350,8 @@ def main(argv=None):
         usa_modo(IDENTIFICAR)
 
     def cancela():
-        if cam_car is not None:
-            cam_car.limpa_selecao()
+        for c in camadas:
+            c.limpa_selecao()
         if estado["modo"] in (DESENHAR, EDITAR):
             usa_modo(IDENTIFICAR)
 
@@ -338,19 +360,19 @@ def main(argv=None):
         if estado["modo"] == DESENHAR and desenho.ativo:
             # ⚠️ CAR como PONTO DE PARTIDA: sem vertice ainda, um clique dentro de um imovel carrega
             # o contorno dele ja' editavel. A pessoa ajusta ou so' da' Enter e nomeia.
-            if (not desenho.pts and cam_car is not None and win.barra.bt_car.isChecked()
+            if (not desenho.pts and camadas
                     and ev.button() == Qt.MouseButton.LeftButton and not ev.double()):
                 p = view.vb.mapSceneToView(ev.scenePos())
-                a, anel = cam_car.em(int(p.y()), int(p.x()))
-                if a is not None:
-                    cs, rs = anel
+                cam, i = sob_o_clique(int(p.y()), int(p.x()))
+                if cam is not None:
+                    cs, rs = cam.aneis[i]
                     pts = [(float(c), float(r)) for c, r in zip(cs, rs)]
                     if len(pts) > 2 and pts[0] == pts[-1]:
                         pts = pts[:-1]
                     desenho.comeca(None, pts)
-                    estado["car_semente"] = dict(a)
-                    win.barra.info.setText(f"contorno do CAR carregado ({resumo_car(a)}) — "
-                                           "ajuste os vértices ou dê Enter")
+                    estado["semente_dados"] = cam.dados(cam.attr[i])
+                    win.barra.info.setText(f"contorno carregado de {cam.titulo} — ajuste os "
+                                           "vértices ou dê Enter")
                     return
             if desenho.clique(ev) and not desenho.ativo:
                 confirma()                      # duplo-clique fechou
@@ -379,16 +401,15 @@ def main(argv=None):
                 return
             # ⚠️ clicar num imovel do CAR que ainda nao e' fazenda SELECIONA e abre para editar:
             # o contorno vira poligono editavel na hora, Enter abre o cadastro.
-            if cam_car is not None and win.barra.bt_car.isChecked():
-                a, anel = cam_car.em(row, col)
-                if a is not None:
-                    cs, rs = anel
-                    pts = [(float(c), float(r)) for c, r in zip(cs, rs)]
-                    if len(pts) > 2 and pts[0] == pts[-1]:
-                        pts = pts[:-1]
-                    usa_modo(DESENHAR, None, semente=(pts, dict(a)))
-                    win.barra.info.setText(f"imóvel do CAR selecionado ({resumo_car(a)}) — "
-                                           "ajuste os vértices ou dê Enter para cadastrar")
+            cam, i = sob_o_clique(row, col)
+            if cam is not None:
+                cs, rs = cam.aneis[i]
+                pts = [(float(c), float(r)) for c, r in zip(cs, rs)]
+                if len(pts) > 2 and pts[0] == pts[-1]:
+                    pts = pts[:-1]
+                usa_modo(DESENHAR, None, semente=(pts, cam.dados(cam.attr[i])))
+                win.barra.info.setText(f"{cam.titulo} selecionado — ajuste os vértices ou dê "
+                                       "Enter para cadastrar")
             return
         try:
             curva = ts_todo.read_curve(row, col)
@@ -402,13 +423,17 @@ def main(argv=None):
         faz = cadastro.em(row, col)
         # ⚠️ com o CAR ligado, o clique tambem SELECIONA o imovel sob o pixel: contorno destacado e
         # cartao com os dados. Nao muda de modo nem adota -- so' mostra.
-        if cam_car is not None and cam_car._visivel:
-            i = cam_car.em_idx(row, col)
-            if i is not None:
-                cam_car.seleciona(i)
-                win.barra.info.setText(f"CAR: {resumo_car(cam_car.attr[i])}")
+        if camadas:
+            cam, i = sob_o_clique(row, col)
+            for c in camadas:
+                if c is not cam:
+                    c.limpa_selecao()
+            if cam is not None:
+                cam.seleciona(i)
+                win.barra.info.setText(f"{cam.titulo}: " + (resumo_car(cam.attr[i]) if cam is cam_car
+                                       else f"#{cam.attr[i].get('id')} · "
+                                            f"{float(cam.attr[i].get('area_ha') or 0):.1f} ha"))
             else:
-                cam_car.limpa_selecao()
                 win.barra.info.setText(f"{len(p_pontos.store)} talhao(oes)")
         if faz is not None and not produtor:
             produtor = faz.get("proprietario") or faz.get("nome") or ""
