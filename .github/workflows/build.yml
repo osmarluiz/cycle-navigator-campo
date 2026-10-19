@@ -37,8 +37,22 @@ jobs:
       - name: pyinstaller
         working-directory: build
         run: pyinstaller --noconfirm --clean cycle-navigator.spec
+      # ⚠️ No Mac, o artefato vai como .tar.gz feito AQUI. O zip do upload-artifact descarta bit de
+      # execucao e symlinks, e um .app tem os dois (os frameworks do Qt sao cheios de symlinks):
+      # baixado em zip, o .app simplesmente nao abre. O tar preserva tudo.
+      - name: empacota (mac)
+        if: runner.os == 'macOS'
+        working-directory: build/dist
+        run: tar -czf CycleNavigator-${{ matrix.nome }}.tar.gz CycleNavigator.app
       - uses: actions/upload-artifact@v4
+        if: runner.os == 'macOS'
         with:
           name: CycleNavigator-${{ matrix.nome }}
-          path: build/dist/
+          path: build/dist/CycleNavigator-${{ matrix.nome }}.tar.gz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: CycleNavigator-${{ matrix.nome }}
+          path: build/dist/CycleNavigator/
           if-no-files-found: error
