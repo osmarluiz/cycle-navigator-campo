@@ -72,8 +72,13 @@ The tool reads a monthly satellite time series over an area of interest, cropped
 <aoi>/input/basemap_mnf_aoi.tif
 <aoi>/products/basemap_class_aoi.tif      uint8 class raster — defines the reference grid
 <aoi>/car/car_aoi.gpkg                    optional: CAR property perimeters, clipped to the AOI
+<aoi>/sam/sam_aoi.gpkg                    optional: field polygons pre-segmented with SAM 2
 <aoi>/pontos/                             written by the tool: points per crop year, farms, surveyor
 ```
+
+`tools/` holds the one-off scripts that produce the CAR and SAM layers (SICAR download with OCR
+captcha, AOI clip, SAM 2.1 tiling, filtering and merge). Both layers behave the same in the tool:
+toggle, click to inspect, adopt as a farm in edit mode, or seed a contour in draw mode.
 
 Overviews matter: without them every pan reads at full resolution and the tool stalls over a large
 area. `gdaladdo -r average <file>.tif 2 4 8 16 32`. It ships no data; it was developed on a
@@ -110,7 +115,14 @@ cd build && pyinstaller --noconfirm cycle-navigator.spec     # -> build/dist/Cyc
 
 Windows builds on Windows; macOS builds only on macOS. `.github/workflows/build.yml` builds all
 three (Windows x64, macOS arm64, macOS x64) and publishes them as artifacts — run it from the Actions
-tab. Put `cycle-navigator.toml` and the `dados/` folder next to the executable.
+tab. The macOS artifact is a `.tar.gz` of `CycleNavigator.app` (a zip would drop the symlinks and
+execute bits the bundle needs). It is not notarized: on first launch, right-click → Open, or
+`xattr -dr com.apple.quarantine CycleNavigator.app`. Put `cycle-navigator.toml` and the `dados/`
+folder next to the executable; `build/monta_ssd.ps1` assembles that layout on an external drive.
+
+Closing the app waits for the map's tile threads to finish. Without that, closing after stepping
+through many months aborted the process (`0xC0000409`: Qt refuses to destroy a running `QThread`).
+`tests/fluxo/` reproduces the real flow in a subprocess so a Qt abort shows up as an exit code.
 
 ## The engine is not in this repository, and that is the point
 
