@@ -12,3 +12,6 @@ cycle-navigator.toml
 # saida do PyInstaller
 build/dist/
 build/work/
+
+# artefatos baixados do GitHub (Mac .tar.gz, Windows)
+build/artefatos/

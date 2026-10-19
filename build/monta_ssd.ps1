@@ -22,9 +22,19 @@ New-Item -ItemType Directory -Force -Path $Destino | Out-Null
 
 if (-not $SoDados) {
     if (-not (Test-Path "$Dist\cycle-navigator.exe")) { throw "executavel nao encontrado em $Dist (rode o PyInstaller antes)" }
-    Write-Output "== executavel =="
+    Write-Output "== executavel (Windows) =="
     robocopy $Dist $Destino /E /J /MT:8 /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy do executavel falhou ($LASTEXITCODE)" }
+    # os .app do Mac (artefatos do GitHub, em .tar.gz) vao junto, para o mesmo SSD servir os dois.
+    # No Mac: tar -xzf CycleNavigator-macos-arm64.tar.gz  (ou -x64 em Mac Intel)
+    $art = Join-Path (Split-Path $Dist -Parent) "..\artefatos"
+    if (Test-Path $art) {
+        Write-Output "== .app do Mac (tar.gz) =="
+        Get-ChildItem $art -Filter "*.tar.gz" | ForEach-Object {
+            Copy-Item $_.FullName (Join-Path $Destino $_.Name) -Force
+            Write-Output ("   {0}  {1:N0} MB" -f $_.Name, ($_.Length / 1MB))
+        }
+    }
 }
 
 Write-Output "== dados (pode levar uma hora num SSD USB 3) =="
