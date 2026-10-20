@@ -17,7 +17,7 @@ jobs:
             nome: windows-x64
           - os: macos-latest        # Apple Silicon (M1/M2/M3/M4)
             nome: macos-arm64
-          - os: macos-13            # Intel
+          - os: macos-15-intel      # Intel (o macos-13 foi aposentado em 2025-12-04 e fica na fila para sempre)
             nome: macos-x64
     runs-on: ${{ matrix.os }}
     steps:
