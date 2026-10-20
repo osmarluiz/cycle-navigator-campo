@@ -31,7 +31,8 @@ if (-not $SoDados) {
     if (Test-Path $art) {
         Write-Output "== .app do Mac (tar.gz) =="
         # o gh run download poe cada artefato numa subpasta com o nome dele: por isso -Recurse
-        Get-ChildItem $art -Recurse -Filter "*.tar.gz" | ForEach-Object {
+        # so' os nossos: dentro do artefato do Windows ha' um dateutil-zoneinfo.tar.gz que nao e' app
+        Get-ChildItem $art -Recurse -Filter "CycleNavigator-*.tar.gz" | ForEach-Object {
             Copy-Item $_.FullName (Join-Path $Destino $_.Name) -Force
             Write-Output ("   {0}  {1:N0} MB" -f $_.Name, ($_.Length / 1MB))
         }
