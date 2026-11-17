@@ -116,9 +116,12 @@ cd build && pyinstaller --noconfirm cycle-navigator.spec     # -> build/dist/Cyc
 Windows builds on Windows; macOS builds only on macOS. `.github/workflows/build.yml` builds all
 three (Windows x64, macOS arm64, macOS x64) and publishes them as artifacts — run it from the Actions
 tab. The macOS artifact is a `.tar.gz` of `CycleNavigator.app` (a zip would drop the symlinks and
-execute bits the bundle needs). It is not notarized: on first launch, right-click → Open, or
+execute bits the bundle needs). It is not notarized: on first launch, macOS ≤ 14 accepts
+right-click → Open; macOS 15+ needs System Settings → Privacy & Security → "Open Anyway", or
 `xattr -dr com.apple.quarantine CycleNavigator.app`. Put `cycle-navigator.toml` and the `dados/`
-folder next to the executable; `build/monta_ssd.ps1` assembles that layout on an external drive.
+folder next to the `.app` (not inside it); `build/monta_ssd.ps1` assembles that layout on an
+external drive. `CLAUDE.md` holds the working context for whoever continues the project: architecture,
+decisions, pitfalls, and how to run from source on macOS.
 
 Closing the app waits for the map's tile threads to finish. Without that, closing after stepping
 through many months aborted the process (`0xC0000409`: Qt refuses to destroy a running `QThread`).
