@@ -119,6 +119,12 @@ CYCLE NAVIGATOR NO MAC
 
 5. Os pontos e fazendas que voce gravar ficam em dados/pontos/. E' isso que volta para o
    projeto. Faca copia dessa pasta ao fim de cada dia de campo.
+
+6. OPCIONAL, RECOMENDADO se o Mac tiver espaco (a pasta toda tem ~290 GB): copie a pasta
+   CycleNavigator inteira do SSD para a pasta pessoal do Mac (arraste no Finder) e use a
+   copia. Fica muito mais rapido e nao depende do SSD estar espetado. O .toml usa caminho
+   relativo: nada precisa ser editado. O cycle-navigator.exe e a pasta _internal sao do
+   Windows e podem ser apagados da copia. O SSD vira o backup.
 "@
 [System.IO.File]::WriteAllText((Join-Path $Destino "LEIA-ME_MAC.txt"), $leiaMac, (New-Object System.Text.UTF8Encoding $false))
 
