@@ -10,7 +10,10 @@
 #     cycle-navigator.toml             <- aoi = "dados"  (relativo: vale em qualquer letra de drive)
 #     dados\cube, input, products, car, sam, pontos
 #
-# ⚠️ robocopy com /J (I/O sem buffer) e /MT: sao ~284 GB. Reexecutar so' copia o que mudou.
+# ⚠️ Sao ~287 GB. Reexecutar so' copia o que mudou (robocopy pula arquivo igual).
+# NAO usar /J nem /MT aqui: num HD USB em exFAT, 8 threads com I/O sem buffer travaram na
+# finalizacao dos arquivos (ficaram com tamanho arredondado ao setor) e o robocopy ficou preso em
+# tentativas infinitas, em silencio. Copia sequencial com buffer, 3 tentativas, log em build\.
 param(
     [Parameter(Mandatory = $true)][string]$Destino,
     [string]$Dados = "F:\sits_aoi_crop",
@@ -28,6 +31,13 @@ function MesesDaSafra([string]$s) {
 $mesesSel = @(); foreach ($s in $Safras) { $mesesSel += MesesDaSafra $s }
 $mesesSel = $mesesSel | Sort-Object -Unique
 $ErrorActionPreference = "Stop"
+$RoboLog = Join-Path $PSScriptRoot "monta_ssd_robocopy.log"
+if (Test-Path $RoboLog) { Remove-Item $RoboLog -Force }
+# so' erros e resumo no log: /NFL /NDL tiram a lista de arquivos, /NP a porcentagem
+$Robo = @("/R:3", "/W:5", "/NFL", "/NDL", "/NJH", "/NP", "/LOG+:$RoboLog")
+function Falhou([string]$oque) {
+    if ($LASTEXITCODE -ge 8) { throw "robocopy de $oque falhou (codigo $LASTEXITCODE); veja $RoboLog" }
+}
 # ⚠️ O SSD tem de estar em exFAT para servir Windows E Mac. Em NTFS o Mac so' LE: o programa abre,
 # mas nao consegue gravar os pontos nem o log. Formatar (apaga o disco!): no Windows, botao direito
 # no drive -> Formatar -> exFAT; ou `Format-Volume -DriveLetter E -FileSystem exFAT`.
@@ -46,8 +56,8 @@ New-Item -ItemType Directory -Force -Path $Destino | Out-Null
 if (-not $SoDados) {
     if (-not (Test-Path "$Dist\cycle-navigator.exe")) { throw "executavel nao encontrado em $Dist (rode o PyInstaller antes)" }
     Write-Output "== executavel (Windows) =="
-    robocopy $Dist $Destino /E /J /MT:8 /NFL /NDL /NJH /NJS /NP | Out-Null
-    if ($LASTEXITCODE -ge 8) { throw "robocopy do executavel falhou ($LASTEXITCODE)" }
+    robocopy $Dist $Destino /E @Robo | Out-Null
+    Falhou "executavel"
     # os .app do Mac (artefatos do GitHub, em .tar.gz) vao junto, para o mesmo SSD servir os dois.
     # No Mac: tar -xzf CycleNavigator-macos-arm64.tar.gz  (ou -x64 em Mac Intel)
     $art = Join-Path (Split-Path $Dist -Parent) "..\artefatos"
@@ -70,11 +80,11 @@ foreach ($sub in @("cube", "input", "products", "car", "sam", "pontos")) {
     if ($sub -eq "cube" -and $mesesSel.Count -gt 0) {
         # pacote reduzido: so' os meses das safras pedidas
         $arqs = $mesesSel | ForEach-Object { "ride_${_}_aoi.tif" }
-        robocopy $o (Join-Path $Destino "dados\cube") @arqs /J /MT:8 /NFL /NDL /NJH /NJS /NP | Out-Null
+        robocopy $o (Join-Path $Destino "dados\cube") @arqs @Robo | Out-Null
     } else {
-        robocopy $o (Join-Path $Destino "dados\$sub") /E /J /MT:8 /NFL /NDL /NJH /NJS /NP /XF *.zip *_bruto.gpkg /XD partes | Out-Null
+        robocopy $o (Join-Path $Destino "dados\$sub") /E @Robo /XF *.zip *_bruto.gpkg /XD partes | Out-Null
     }
-    if ($LASTEXITCODE -ge 8) { throw "robocopy de $sub falhou ($LASTEXITCODE)" }
+    Falhou $sub
     $gb = [math]::Round((Get-ChildItem (Join-Path $Destino "dados\$sub") -Recurse -File | Measure-Object Length -Sum).Sum / 1GB, 1)
     Write-Output ("   {0,-9} {1,7} GB" -f $sub, $gb)
 }
@@ -128,6 +138,11 @@ CYCLE NAVIGATOR NO MAC
 "@
 [System.IO.File]::WriteAllText((Join-Path $Destino "LEIA-ME_MAC.txt"), $leiaMac, (New-Object System.Text.UTF8Encoding $false))
 
+# conferencia: tamanho de cada tif igual ao da origem (pega copia interrompida ou nao finalizada)
+$dif = Get-ChildItem (Join-Path $Destino "dados\cube") -Filter *.tif | Where-Object {
+    $orig = Join-Path $Dados "cube\$($_.Name)"; -not (Test-Path $orig) -or (Get-Item $orig).Length -ne $_.Length }
+if ($dif) { Write-Warning ("tamanho diferente da origem: " + (($dif | ForEach-Object Name) -join ", ") + " -- rode de novo") }
+else { Write-Output "   cube: todos os tifs com o tamanho da origem" }
 $tot = [math]::Round((Get-ChildItem $Destino -Recurse -File | Measure-Object Length -Sum).Sum / 1GB, 1)
 Write-Output "== pronto: $Destino ($tot GB) =="
 Write-Output "   Windows: abra cycle-navigator.exe.  Mac: copie o CycleNavigator.app (artefato do GitHub) para esta pasta."
