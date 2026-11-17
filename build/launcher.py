@@ -7,8 +7,12 @@ from pathlib import Path
 
 
 def main():
-    base = Path(getattr(sys, "_MEIPASS", "")) if getattr(sys, "frozen", False) else None
     exe_dir = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path.cwd()
+    # ⚠️ No Mac o executavel vive DENTRO do pacote (CycleNavigator.app/Contents/MacOS/), onde
+    # ninguem poe arquivo. "Ao lado do executavel" tem de significar ao lado do .app: e' la' que o
+    # usuario deixa o cycle-navigator.toml e a pasta dados/, e e' la' que o log deve aparecer.
+    if exe_dir.parent.name == "Contents" and exe_dir.parent.parent.suffix == ".app":
+        exe_dir = exe_dir.parent.parent.parent
     toml = exe_dir / "cycle-navigator.toml"
     argv = sys.argv[1:]
     if "--config" not in argv and toml.exists():

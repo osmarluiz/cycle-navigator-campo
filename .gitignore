@@ -15,3 +15,4 @@ build/work/
 
 # artefatos baixados do GitHub (Mac .tar.gz, Windows)
 build/artefatos/
+build/*.log

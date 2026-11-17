@@ -18,6 +18,19 @@ param(
     [switch]$SoDados
 )
 $ErrorActionPreference = "Stop"
+# ⚠️ O SSD tem de estar em exFAT para servir Windows E Mac. Em NTFS o Mac so' LE: o programa abre,
+# mas nao consegue gravar os pontos nem o log. Formatar (apaga o disco!): no Windows, botao direito
+# no drive -> Formatar -> exFAT; ou `Format-Volume -DriveLetter E -FileSystem exFAT`.
+$letra = ($Destino -split ":")[0]
+if ($letra.Length -eq 1) {
+    $vol = Get-Volume -DriveLetter $letra -ErrorAction SilentlyContinue
+    if ($vol -and $vol.FileSystem -ne "exFAT") {
+        Write-Warning ("o drive {0}: esta' em {1}. Para usar tambem num Mac, formate em exFAT ANTES de copiar " +
+                       "(num Mac, {1} e' somente-leitura e o programa nao grava os pontos)." -f $letra, $vol.FileSystem)
+        $resp = Read-Host "Continuar mesmo assim? (s/N)"
+        if ($resp -notmatch "^[sS]") { throw "interrompido: formate o SSD em exFAT e rode de novo" }
+    }
+}
 New-Item -ItemType Directory -Force -Path $Destino | Out-Null
 
 if (-not $SoDados) {
@@ -55,6 +68,35 @@ $toml = Get-Content "D:\NAVIGATOR\cycle-navigator.toml" -Raw
 $toml = $toml -replace 'aoi\s*=\s*"[^"]*"', 'aoi = "dados"'
 $toml = $toml -replace '(?m)^\s*car\s*=.*$', ''
 [System.IO.File]::WriteAllText((Join-Path $Destino "cycle-navigator.toml"), $toml, (New-Object System.Text.UTF8Encoding $false))
+
+# instrucoes para quem abrir o SSD num Mac (sem acento no nome do arquivo: exFAT + Finder)
+$leiaMac = @"
+CYCLE NAVIGATOR NO MAC
+
+1. Descubra o chip:  menu Apple > Sobre este Mac.
+   "Chip Apple M1/M2/M3/M4"  -> use CycleNavigator-macos-arm64.tar.gz
+   "Processador Intel"        -> use CycleNavigator-macos-x64.tar.gz
+   Precisa de macOS 12 (Monterey) ou mais novo.
+
+2. Extraia o .tar.gz AQUI MESMO, nesta pasta do SSD (duplo clique no Finder, ou no Terminal):
+      cd /Volumes/<nome do SSD>/CycleNavigator
+      tar -xzf CycleNavigator-macos-arm64.tar.gz
+   Vai aparecer CycleNavigator.app ao lado de cycle-navigator.toml e da pasta dados.
+   O programa procura o .toml e a pasta dados AO LADO do .app: nao mova o .app para outro lugar
+   sem levar os dois junto.
+
+3. Primeira abertura: o macOS bloqueia apps sem assinatura da Apple.
+   Botao direito (ou Control+clique) no CycleNavigator.app > Abrir > Abrir.  So' na primeira vez.
+   Se nao aparecer a opcao, no Terminal:
+      xattr -dr com.apple.quarantine "/Volumes/<nome do SSD>/CycleNavigator/CycleNavigator.app"
+
+4. Demora cerca de 1 minuto para abrir (carrega 4 safras, CAR e SAM). Se algo der errado,
+   o arquivo cycle-navigator.log aparece nesta pasta: mande ele.
+
+5. Os pontos e fazendas que voce gravar ficam em dados/pontos/. E' isso que volta para o
+   projeto. Faca copia dessa pasta ao fim de cada dia de campo.
+"@
+[System.IO.File]::WriteAllText((Join-Path $Destino "LEIA-ME_MAC.txt"), $leiaMac, (New-Object System.Text.UTF8Encoding $false))
 
 $tot = [math]::Round((Get-ChildItem $Destino -Recurse -File | Measure-Object Length -Sum).Sum / 1GB, 1)
 Write-Output "== pronto: $Destino ($tot GB) =="
