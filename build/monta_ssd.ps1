@@ -15,8 +15,18 @@ param(
     [Parameter(Mandatory = $true)][string]$Destino,
     [string]$Dados = "F:\sits_aoi_crop",
     [string]$Dist = "D:\NAVIGATOR\build\dist\CycleNavigator",
-    [switch]$SoDados
+    [switch]$SoDados,
+    # Pacote reduzido: so' os meses destas safras ("2023/24" = out/2023..set/2024). Uma safra sao
+    # ~75 GB em vez de 287 -- cabe no disco interno de um MacBook Air. Vazio = todos os meses.
+    [string[]]$Safras = @()
 )
+
+function MesesDaSafra([string]$s) {
+    $a = [int]$s.Substring(0, 4)
+    @(10, 11, 12 | ForEach-Object { $a * 100 + $_ }) + @(1..9 | ForEach-Object { ($a + 1) * 100 + $_ })
+}
+$mesesSel = @(); foreach ($s in $Safras) { $mesesSel += MesesDaSafra $s }
+$mesesSel = $mesesSel | Sort-Object -Unique
 $ErrorActionPreference = "Stop"
 # ⚠️ O SSD tem de estar em exFAT para servir Windows E Mac. Em NTFS o Mac so' LE: o programa abre,
 # mas nao consegue gravar os pontos nem o log. Formatar (apaga o disco!): no Windows, botao direito
@@ -57,7 +67,13 @@ foreach ($sub in @("cube", "input", "products", "car", "sam", "pontos")) {
     $o = Join-Path $Dados $sub
     if (-not (Test-Path $o)) { Write-Output "   (sem $sub, pulando)"; continue }
     # ⚠️ NAO leva os zips brutos do SICAR (907 MB), as partes do SAM nem o SAM bruto: so' o final
-    robocopy $o (Join-Path $Destino "dados\$sub") /E /J /MT:8 /NFL /NDL /NJH /NJS /NP /XF *.zip *_bruto.gpkg /XD partes | Out-Null
+    if ($sub -eq "cube" -and $mesesSel.Count -gt 0) {
+        # pacote reduzido: so' os meses das safras pedidas
+        $arqs = $mesesSel | ForEach-Object { "ride_${_}_aoi.tif" }
+        robocopy $o (Join-Path $Destino "dados\cube") @arqs /J /MT:8 /NFL /NDL /NJH /NJS /NP | Out-Null
+    } else {
+        robocopy $o (Join-Path $Destino "dados\$sub") /E /J /MT:8 /NFL /NDL /NJH /NJS /NP /XF *.zip *_bruto.gpkg /XD partes | Out-Null
+    }
     if ($LASTEXITCODE -ge 8) { throw "robocopy de $sub falhou ($LASTEXITCODE)" }
     $gb = [math]::Round((Get-ChildItem (Join-Path $Destino "dados\$sub") -Recurse -File | Measure-Object Length -Sum).Sum / 1GB, 1)
     Write-Output ("   {0,-9} {1,7} GB" -f $sub, $gb)
@@ -67,6 +83,11 @@ foreach ($sub in @("cube", "input", "products", "car", "sam", "pontos")) {
 $toml = Get-Content "D:\NAVIGATOR\cycle-navigator.toml" -Raw
 $toml = $toml -replace 'aoi\s*=\s*"[^"]*"', 'aoi = "dados"'
 $toml = $toml -replace '(?m)^\s*car\s*=.*$', ''
+if ($mesesSel.Count -gt 0) {
+    # o config confere que TODO mes listado existe: num pacote reduzido a lista tem de encolher junto
+    $lista = "meses = [" + (($mesesSel | ForEach-Object { "$_" }) -join ", ") + "]"
+    $toml = [regex]::Replace($toml, '(?s)meses\s*=\s*\[.*?\]', $lista)
+}
 [System.IO.File]::WriteAllText((Join-Path $Destino "cycle-navigator.toml"), $toml, (New-Object System.Text.UTF8Encoding $false))
 
 # instrucoes para quem abrir o SSD num Mac (sem acento no nome do arquivo: exFAT + Finder)
@@ -86,8 +107,11 @@ CYCLE NAVIGATOR NO MAC
    sem levar os dois junto.
 
 3. Primeira abertura: o macOS bloqueia apps sem assinatura da Apple.
-   Botao direito (ou Control+clique) no CycleNavigator.app > Abrir > Abrir.  So' na primeira vez.
-   Se nao aparecer a opcao, no Terminal:
+   - macOS 14 ou anterior: botao direito (Control+clique) no CycleNavigator.app > Abrir > Abrir.
+   - macOS 15 (Sequoia) ou mais novo: o botao direito ja' nao basta. Tente abrir uma vez (vai
+     bloquear), depois va' em Ajustes do Sistema > Privacidade e Seguranca, role ate' o fim e
+     clique em "Abrir Mesmo Assim". So' na primeira vez.
+   - Alternativa em qualquer versao, no Terminal (tira a marca de quarentena):
       xattr -dr com.apple.quarantine "/Volumes/<nome do SSD>/CycleNavigator/CycleNavigator.app"
 
 4. Demora cerca de 1 minuto para abrir (carrega 4 safras, CAR e SAM). Se algo der errado,
