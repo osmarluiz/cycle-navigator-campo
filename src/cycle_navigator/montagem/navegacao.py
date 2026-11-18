@@ -52,18 +52,51 @@ def instala(ctx):
         if QMessageBox.question(tabs, "Excluir", "Excluir este ponto rotulado?"
                                 ) != QMessageBox.StandardButton.Yes:
             return
+        # ⚠️ o excluido fica guardado (so' o ultimo, so' enquanto o programa esta' aberto): com o
+        # produtor ao lado, um clique errado em "Excluir" nao pode custar a conversa inteira
+        velho = p_pontos.store.find_at(row, col)
+        estado["excluido"] = (estado["safra"], dict(velho)) if velho is not None else None
         p_pontos.store.remove_at(row, col)
+        _depois_de_mexer(row, col)
+        tabs.pontos.bt_desfaz.setEnabled(estado["excluido"] is not None)
+        import sys
+        tecla = "⌘Z" if sys.platform == "darwin" else "Ctrl+Z"
+        win.avisa(f"Talhão excluído  ·  {tecla} desfaz", "info", 6000)
+
+    def _depois_de_mexer(row, col):
         p_pontos.atualiza_info()
         cam_pontos.redesenha()
         tabs.pontos.lista(p_pontos.store)
         conta()
         refresca_analise()
         if p_ciclo.rc == (row, col) and estado["modo"] == IDENTIFICAR:
-            ao_clicar(row, col)                 # o painel aberto deixa de dizer "ja' levantado"
-        win.avisa("Talhão excluído", "info")
+            ao_clicar(row, col)                 # o painel aberto volta a dizer a verdade
+
+    def desfaz_exclusao():
+        guardado = estado.get("excluido")
+        st = p_pontos.store
+        if not guardado or st is None:
+            return
+        safra, pt = guardado
+        if safra != estado["safra"]:
+            win.avisa(f"O talhão excluído é da safra {safra}: volte a ela para desfazer", "info", 5000)
+            return
+        if st.find_at(pt["row"], pt["col"]) is not None:      # ja' regravaram no mesmo lugar
+            win.avisa("Já existe um talhão gravado nesse lugar", "info")
+            return
+        if any(q.get("id") == pt.get("id") for q in st.points):
+            pt["id"] = max(q["id"] for q in st.points) + 1
+        st.points.append(pt)
+        st._reindex()
+        st.save()
+        estado["excluido"] = None
+        tabs.pontos.bt_desfaz.setEnabled(False)
+        _depois_de_mexer(pt["row"], pt["col"])
+        win.avisa("Talhão de volta", "ok")
 
     # o que esta peca deixa para as outras
     ctx.centra = centra
     ctx.centra_fazenda = centra_fazenda
     ctx.exclui_ponto = exclui_ponto
+    ctx.desfaz_exclusao = desfaz_exclusao
     ctx.vai_ao_ponto = vai_ao_ponto

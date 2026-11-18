@@ -56,7 +56,7 @@ COR_CURVA = estilo.ACCENT
 
 # as culturas que ganham botao de um clique, nesta ordem, quando ninguem gravou nada ainda; depois
 # a ordem passa a ser a das mais gravadas
-RAPIDAS = ["Soja", "Milho safrinha", "Milho", "Feijao", "Sorgo", "Algodao", "Pastagem"]
+RAPIDAS = ["Soja", "Milho safrinha", "Milho", "Feijão", "Sorgo", "Algodão", "Pastagem"]
 N_RAPIDAS = 7
 
 

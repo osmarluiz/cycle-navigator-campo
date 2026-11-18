@@ -171,6 +171,7 @@ class AbaPontos(QWidget):
     irPara = pyqtSignal(int, int)        # row, col -> centraliza e reabre
     excluir = pyqtSignal(int, int)
     exportar = pyqtSignal()
+    desfazer = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -197,7 +198,9 @@ class AbaPontos(QWidget):
         self.bt_excluir = QPushButton("Excluir"); self.bt_excluir.setObjectName("perigo")
         self.bt_exp = QPushButton("Exportar…")
         self.bt_exp.setIcon(qta.icon("mdi6.export", color=estilo.TEXT))
-        for x in (self.bt_ir, self.bt_excluir, self.bt_exp):
+        self.bt_desfaz = QPushButton("Desfazer exclusão"); self.bt_desfaz.setEnabled(False)
+        self.bt_desfaz.clicked.connect(self.desfazer)
+        for x in (self.bt_ir, self.bt_excluir, self.bt_desfaz, self.bt_exp):
             b.addWidget(x)
         lay.addLayout(b)
         self.bt_ir.clicked.connect(lambda: self._ir(self.tab.currentRow(), 0))

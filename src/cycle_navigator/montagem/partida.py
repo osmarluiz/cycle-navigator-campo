@@ -50,6 +50,9 @@ def instala(ctx):
     tabs.fazendas.exportar.connect(lambda: exporta_camada('fazendas'))
     tabs.pontos.irPara.connect(vai_ao_ponto)
     tabs.pontos.excluir.connect(exclui_ponto)
+    tabs.pontos.desfazer.connect(ctx.desfaz_exclusao)
+    from PyQt6.QtGui import QKeySequence, QShortcut
+    QShortcut(QKeySequence(QKeySequence.StandardKey.Undo), win).activated.connect(ctx.desfaz_exclusao)
     tabs.pontos.exportar.connect(lambda: exporta_camada('pontos'))
     view.vb.sigRangeChanged.connect(cam_pontos.redesenha)
 
