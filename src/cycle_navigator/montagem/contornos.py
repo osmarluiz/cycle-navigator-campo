@@ -64,7 +64,7 @@ def instala(ctx):
         return None, None
     tabs.fazendas.lista(cadastro)
     estado = {"safra": safra, "modo": IDENTIFICAR, "mes": None, "camada": CAMADAS_MES[0],
-              "car_semente": "", "semente_dados": {}, "fonte": "talhao", "sam": None,
+              "car_semente": "", "semente_dados": {}, "fonte": "pixel", "sam": None,
               "recorte": None}       # {"poli": Polygon, "pontos": [(row, col, 1|0)], "nota": float}
     _curvas = {}
 

@@ -40,7 +40,7 @@ def instala(ctx):
     win.barra.exportar.connect(lambda: exporta_camada('pontos'))
     win.confirmou.connect(confirma)
     win.cancelou.connect(cancela)
-    win.desfezVertice.connect(desenho.desfaz_vertice)
+    win.desfezVertice.connect(ctx.desfaz_desenho)
     view.pixelClicked.connect(clique_do_mapa)
     p_ciclo.gravar.connect(ao_gravar)
     def redesenha_contorno(fid):

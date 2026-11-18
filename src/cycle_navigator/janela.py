@@ -35,9 +35,9 @@ log = logging.getLogger(__name__)
 
 IDENTIFICAR, DESENHAR, EDITAR = "identificar", "desenhar", "editar"
 DICA = {
-    IDENTIFICAR: "Clique num talhão para ver o ano dele  ·  ← → troca o mês",
-    DESENHAR: "Clique para pôr vértices · duplo-clique fecha · dentro de um contorno do CAR/SAM, "
-              "parte dele · Esc cancela",
+    IDENTIFICAR: "Clique no mapa: a série do pixel e a fazenda do lugar  ·  ← → troca o mês",
+    DESENHAR: "Desenhe o contorno de uma fazenda: à mão, automático ou copiado  ·  "
+              "Esc cancela",
     EDITAR: "Clique numa fazenda para mover os vértices · num contorno do CAR/SAM para adotá-lo · "
             "duplo-clique abre o cadastro · Esc sai",
 }
@@ -252,7 +252,7 @@ class BarraTopo(QWidget):
         self._bt_modo = {}
         for modo, txt, ico, dica in (
                 (IDENTIFICAR, "Identificar", "mdi6.cursor-default-click-outline",
-                 "clicar num talhão abre o ano dele (Esc)"),
+                 "clicar no mapa mostra o pixel e a fazenda (Esc)"),
                 (DESENHAR, "Desenhar", "mdi6.vector-polygon", "traçar o contorno de uma fazenda"),
                 (EDITAR, "Editar", "mdi6.vector-square-edit",
                  "mover vértices, adotar um contorno do CAR/SAM, abrir o cadastro")):

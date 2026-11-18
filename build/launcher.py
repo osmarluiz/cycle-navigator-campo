@@ -21,9 +21,12 @@ def main():
     # Sem console (ver o .spec), o log precisa de um lugar: um arquivo ao lado do executavel,
     # reescrito a cada abertura. E' o que se pede ao aluno quando algo der errado em campo.
     import logging
+    # ⚠️ o autoteste tem log proprio: com o mesmo nome ele APAGAVA o log do programa aberto ao
+    # lado (filemode="w"), e com ele o registro do que a pessoa tinha feito na sessao.
+    nome_log = "cycle-navigator-autoteste.log" if "--autoteste" in sys.argv else "cycle-navigator.log"
     try:
         logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s",
-                            filename=str(exe_dir / "cycle-navigator.log"), filemode="w",
+                            filename=str(exe_dir / nome_log), filemode="w",
                             encoding="utf-8")
     except OSError:
         logging.basicConfig(level=logging.INFO)     # pasta somente-leitura: segue sem arquivo

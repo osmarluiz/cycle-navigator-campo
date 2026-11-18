@@ -6,13 +6,10 @@ puseram nele e deixa nele o que define. Nome de peca POSTERIOR aparece como `ctx
 lido quando a funcao roda, com tudo ja' montado.
 """
 import logging
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication
 import numpy as np
 from .. import estilo
 from ..janela import DESENHAR
 from ..janela import EDITAR
-from ..janela import IDENTIFICAR
 
 log = logging.getLogger(__name__)
 
@@ -32,9 +29,7 @@ def instala(ctx):
     latlon = ctx.latlon
     p_ciclo = ctx.p_ciclo
     p_pontos = ctx.p_pontos
-    pede_recorte = ctx.pede_recorte
     poe_alfinete = ctx.poe_alfinete
-    recorte = ctx.recorte
     recorte_gravado = ctx.recorte_gravado
     sob_o_clique = ctx.sob_o_clique
     status = ctx.status
@@ -45,23 +40,6 @@ def instala(ctx):
 
     # ---------------- clique no mapa ----------------
     def clique_do_mapa(row, col):
-        """⇧ clique e ⌥ clique corrigem o recorte aberto ("isto tambem" / "isto nao")."""
-        mods = QApplication.keyboardModifiers()
-        rec = estado.get("recorte")
-        corrige = None
-        if mods & Qt.KeyboardModifier.ShiftModifier:
-            corrige = 1
-        elif mods & Qt.KeyboardModifier.AltModifier:
-            corrige = 0
-        if (corrige is not None and rec and recorte.ok and estado["modo"] == IDENTIFICAR
-                and p_ciclo.rc is not None):
-            novo = pede_recorte(rec["pontos"] + [(int(row), int(col), corrige)])
-            if novo is None:
-                win.avisa("Não consegui recortar com essa correção", "info")
-                return
-            manter = p_ciclo.segmentos() if p_ciclo._tocado else None
-            ao_clicar(*p_ciclo.rc, manter=manter, rec=novo)
-            return
         ao_clicar(row, col)
 
     def ao_clicar(row, col, manter=None, rec=None):
@@ -93,25 +71,13 @@ def instala(ctx):
             if ja is not None:
                 row, col = ja
         curva, n_am = None, 0
-        # ⚠️ RECORTE NA HORA. Tres caminhos chegam aqui: (1) o ponto ja' foi gravado com um
-        # contorno recortado -> reabre com ele, sem chamar o modelo; (2) a fonte escolhida e'
-        # "Recortar"; (3) a fonte e' "Talhao" mas nao ha' talhao pronto sob o clique.
-        if rec is None and estado["fonte"] != "pixel":
+        # ⚠️⚠️ IDENTIFICAR NAO RECORTA. O SAM e' ferramenta do Desenhar (ver barra_desenho.py); aqui
+        # o clique so' LE^: a serie do pixel -- ou, se pedida, a media do talhao pronto -- e a
+        # fazenda do lugar. Excecao unica: ponto antigo gravado com contorno recortado reabre com ele.
+        if rec is None and estado["fonte"] == "talhao":
             gravado = p_pontos.store.find_at(row, col) if p_pontos.store is not None else None
-            if gravado and gravado.get("fonte_curva") == "recorte" and estado["fonte"] == "talhao":
+            if gravado and gravado.get("fonte_curva") == "recorte":
                 rec = recorte_gravado(gravado)
-            elif recorte.ok and (estado["fonte"] == "recorte" or i_sam is None):
-                rec = pede_recorte([(int(row), int(col), 1)])
-                # ⚠️ fora de lavoura (cerrado, cidade, represa) o modelo devolve "talhoes" de
-                # milhares de hectares com nota baixa. Sem ninguem ter pedido o recorte, isso e'
-                # ruido: fica o ponto. Pedido de proposito ("Recortar"), so' o absurdo e' recusado.
-                if rec is not None:
-                    ha = rec["poli"].area * PX_HA
-                    pedido = estado["fonte"] == "recorte"
-                    if ha > (3000 if pedido else 400) or (not pedido and rec["nota"] < 0.75):
-                        rec = None
-                if rec is None and estado["fonte"] == "recorte":
-                    win.avisa("Não consegui recortar um talhão aqui — mostrando só o ponto", "info")
         if rec is not None:
             try:
                 curva, n_am = curva_do_poligono(rec["poli"], ("rec", rec["poli"].wkb))
@@ -119,7 +85,7 @@ def instala(ctx):
                 log.warning("media do recorte indisponivel em (%d,%d): %s", row, col, e)
             if curva is None or not np.isfinite(curva).any():
                 rec, curva = None, None
-        if rec is None and i_sam is not None and estado["fonte"] != "pixel":
+        if rec is None and i_sam is not None and estado["fonte"] == "talhao":
             try:
                 curva, n_am = curva_do_talhao(i_sam)
             except Exception as e:
@@ -162,26 +128,21 @@ def instala(ctx):
         estado["sam"] = i_sam if do_talhao else None
         if faz is not None and not produtor:
             produtor = faz.get("proprietario") or faz.get("nome") or ""
+        rot = lambda t: (f"<span style='color:{estilo.TEXT_3};font-size:10px;font-weight:600;"
+                         f"letter-spacing:1px'>{t}</span> &nbsp;")
 
         def br(v, casas=1):
             return f"{v:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
         if rec is not None:
-            titulo = f"Talhão de {br(rec['poli'].area * PX_HA)} ha"
-            n_cor = len(rec["pontos"]) - 1
-            # nota baixa = o modelo nao tinha certeza do que era "isto": dizer, em vez de esconder
-            incerto = (f" · <span style='color:#e0a23a'>contorno incerto — confira</span>"
-                       if 0 < rec["nota"] < 0.8 else "")
-            sub = ["recortado agora" + (f" com {n_cor} correção(ões)" if n_cor else "") + incerto,
-                   f"média de {n_am} amostras", "⇧ clique soma · ⌥ clique tira"]
+            titulo = f"Média do talhão de {br(rec['poli'].area * PX_HA)} ha"
+            sub = [f"{n_am} amostras do contorno gravado"]
         elif do_talhao:
             ha = cam_sam.polys[i_sam].area * cam_sam.px_ha
-            titulo = f"Talhão de {br(ha)} ha"
-            sub = [f"média de {n_am} amostras do talhão"]
+            titulo = f"Média do talhão de {br(ha)} ha"
+            sub = [f"{n_am} amostras"]
         else:
-            titulo = "Ponto"
-            sub = [f"um pixel de {br(abs(classe.transform.a))} m"]
-        if faz is not None and (faz.get("nome") or faz.get("proprietario")):
-            sub.insert(0, f"<b>{faz.get('nome') or faz.get('proprietario')}</b>")
+            titulo = "Pixel"
+            sub = [f"{br(abs(classe.transform.a))} m"]
         if cam_car is not None:
             k = cam_car.em_idx(row, col)
             mun = str(cam_car.attr[k].get("municipio") or "").strip() if k is not None else ""
@@ -192,13 +153,23 @@ def instala(ctx):
             sub.append(f"{ll[0]:.5f}, {ll[1]:.5f}")
         if ja_levantado:
             sub.append(f"<span style='color:{estilo.ACCENT}'>já levantado</span>")
+        # ⚠️⚠️ DUAS INFORMACOES, DUAS LINHAS: a do pixel (onde, que curva) e a da fazenda (de quem).
+        # Misturadas numa frase so', ninguem sabia qual dado vinha de onde.
+        if faz is not None:
+            dono = faz.get("proprietario") or ""
+            partes = [f"<b>{faz.get('nome') or 'sem nome'}</b>"] + ([dono] if dono else [])
+            if faz.get("area_ha"):
+                partes.append(f"{br(faz['area_ha'])} ha")
+            linha_faz = " · ".join(partes)
+        else:
+            linha_faz = (f"<span style='color:{estilo.TEXT_3}'>nenhuma cadastrada aqui — "
+                         f"use Desenhar para criar</span>")
+        subtitulo = (rot("PIXEL") + " &nbsp;·&nbsp; ".join(sub) + "<br>" + rot("FAZENDA") + linha_faz)
         p_ciclo.define_fonte(i_sam is not None or rec is not None,
-                             "recorte" if (rec is not None and estado["fonte"] == "recorte") else
-                             "talhao" if (do_talhao or rec is not None) else "pixel",
-                             recorte=recorte.ok)
+                             "talhao" if (do_talhao or rec is not None) else "pixel")
         p_ciclo.mostra(row, col, curva, cfg.meses, janela=cfg.meses_de(estado["safra"]),
                        ja_gravado=faixas, produtor=produtor, titulo=titulo,
-                       subtitulo=" &nbsp;·&nbsp; ".join(sub))
+                       subtitulo=subtitulo)
 
     # o que esta peca deixa para as outras
     ctx.ao_clicar = ao_clicar

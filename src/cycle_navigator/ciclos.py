@@ -258,11 +258,9 @@ class PainelCiclo(QWidget):
         txts.addWidget(self.titulo); txts.addWidget(self.subtitulo)
         cab.addLayout(txts, 1)
         self.seg_fonte = Segmentado([
-            ("talhao", "Talhão", "a curva é a MÉDIA do talhão recortado automaticamente: menos "
-                                 "ruído, e é o talhão inteiro que o produtor descreve"),
-            ("recorte", "Recortar", "o programa recorta o talhão na hora, a partir do seu clique. "
-                                    "⇧ clique = isto também · ⌥ clique = isto não"),
-            ("pixel", "Ponto", "a curva é só o pixel clicado (4,8 m)")])
+            ("pixel", "Pixel", "a curva é a do pixel clicado (4,8 m)"),
+            ("talhao", "Média do talhão", "a curva é a MÉDIA do talhão pronto sob o clique: menos "
+                                          "ruído que um pixel só")])
         self.seg_fonte.escolheu.connect(lambda v: self.fonteMudou.emit(str(v)))
         cab.addWidget(self.seg_fonte)
         self.seg_janela = Segmentado([(12, "Safra", "os 12 meses da safra (out → set)"),
@@ -318,6 +316,7 @@ class PainelCiclo(QWidget):
                                           pen=pg.mkPen(COR_CURVA, width=2),
                                           hoverBrush=pg.mkBrush(143, 196, 82, 70))
         self.janela.setZValue(10)
+        [li.setCursor(Qt.CursorShape.SizeHorCursor) for li in self.janela.lines]
         self.geral.addItem(self.janela)
         self.janela.sigRegionChanged.connect(self._janela_mudou)
         lay.addWidget(self.geral)
@@ -447,9 +446,8 @@ class PainelCiclo(QWidget):
         return self.cores.get((cultura or "").strip().lower())
 
     def define_fonte(self, disponivel, atual, recorte=False):
-        """Talhao/Ponto: 'Talhao' so' existe quando o clique caiu dentro de um talhao do SAM."""
+        """Pixel/Media: a media so' existe quando o clique caiu dentro de um talhao pronto."""
         self.seg_fonte.bts["talhao"].setEnabled(disponivel)
-        self.seg_fonte.bts["recorte"].setVisible(recorte)
         self.seg_fonte.marca(atual)
 
     # ================= abrir um talhao =================
@@ -582,10 +580,11 @@ class PainelCiclo(QWidget):
         self.titulo.setText(
             f"{self._titulo} &nbsp;<span style='color:{estilo.TEXT_2};font-weight:400'>· "
             f"{rotulo_mes(self.meses[i0])} → {rotulo_mes(self.meses[i1])}</span>")
-        sub = [s for s in (self._subtitulo, self._leitura()) if s]
+        l1, _, l2 = (self._subtitulo or "").partition("<br>")     # 1a linha: pixel; 2a: fazenda
+        sub = [s for s in (l1, self._leitura()) if s]
         if erro:
             sub = [f"<span style='color:#e8a33d'>{erro}</span>"]
-        self.subtitulo.setText(" &nbsp;·&nbsp; ".join(sub))
+        self.subtitulo.setText(" &nbsp;·&nbsp; ".join(sub) + ("<br>" + l2 if l2 else ""))
 
     def _leitura(self):
         """Quantos ciclos o motor leu na janela, em palavras."""
@@ -652,6 +651,7 @@ class PainelCiclo(QWidget):
         for li in reg.lines:
             li.setPen(pg.mkPen(COR_FOCO, width=3))
             li.setHoverPen(pg.mkPen("#ffffff", width=4))
+            li.setCursor(Qt.CursorShape.SizeHorCursor)      # <-> : "esta borda se arrasta"
         reg.setZValue(-10)
         self.plot.addItem(reg)
         txt = pg.TextItem("", anchor=(0.5, 0))
