@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import (QAbstractItemView, QFrame, QGridLayout, QHBoxLayout
                              QTableWidgetItem, QVBoxLayout, QWidget)
 
 from . import estilo
+from .texto import data_br, plural
 from .tabelas import MES, resumo_faixas
 
 SEM_NOME = "sem cultura"
@@ -54,11 +55,9 @@ def pendencias(pt, repetidos=()):
         m.append("faixa sem cultura")
     conf = {s.get("confianca") for s in cic} - {"certo", None}
     if conf:
-        m.append("dúvida: " + ", ".join(sorted(str(c) for c in conf)))
+        m.append("dúvida: " + ", ".join(sorted(str(c).replace("nao", "não") for c in conf)))
     if not (pt.get("produtor") or "").strip():
         m.append("sem produtor")
-    if pt.get("fonte_curva") == "pixel":
-        m.append("curva de um pixel só")
     if pt.get("id") in repetidos:
         m.append("mesmo talhão gravado mais de uma vez")
     return m
@@ -224,7 +223,7 @@ class JanelaAnalise(QWidget):
         self.area_sist.setStyleSheet("background: transparent;")
         self.area_sist.viewport().setAutoFillBackground(False)
         self.cx_sist.setAutoFillBackground(False)
-        self.tab.setColumnWidth(3, 190) if hasattr(self, "tab") else None
+        self.tab.setColumnWidth(3, 150) if hasattr(self, "tab") else None
         lay.addWidget(self.area_sist, 1)
         g.addWidget(f, 1, 0)
 
@@ -269,8 +268,8 @@ class JanelaAnalise(QWidget):
         h.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         h.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
         h.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
-        self.tab.setColumnWidth(0, 150); self.tab.setColumnWidth(2, 64)
-        self.tab.setColumnWidth(3, 170)
+        self.tab.setColumnWidth(0, 170); self.tab.setColumnWidth(2, 48)
+        self.tab.setColumnWidth(3, 190)
         self.tab.setTextElideMode(Qt.TextElideMode.ElideRight)
         self.tab.setWordWrap(False)
         self.tab.cellDoubleClicked.connect(self._ir)
@@ -299,12 +298,12 @@ class JanelaAnalise(QWidget):
         lev = " · ".join(f"{k} ({v})" for k, v in sorted(r["levantadores"].items(),
                                                          key=lambda kv: -kv[1]))
         self.sub.setText(f"levantado por {lev} · último registro "
-                         f"{r['ultimo'].replace('T', ' ')[:16]}")
+                         f"{data_br(r['ultimo'])}")
         self.n_talhoes.poe(_br(r["n"]))
-        self.n_ha.poe(_br(r["ha"], 1 if r["ha"] < 1000 else 0),
-                      "hectares" + (f" ({r['sem_area']} ponto(s) sem área)" if r["sem_area"] else ""))
+        self.n_ha.poe(_br(r["ha"], 1 if r["ha"] < 1000 else 0) if r["ha"] else "—",
+                      "hectares de talhão" + (f" · {plural(r['sem_area'], 'ponto', 'pontos')} sem área" if r["sem_area"] else ""))
         self.n_prod.poe(_br(r["produtores"]),
-                        "produtores" + (f" · {r['fazendas']} fazenda(s)" if r["fazendas"] else ""))
+                        "produtores" + (f" · {plural(r['fazendas'], 'fazenda', 'fazendas')}" if r["fazendas"] else ""))
         self.n_sist.poe(_br(len(r["sistemas"])))
         self.n_conf.poe(_br(len(r["conferir"])), alerta=bool(r["conferir"]))
         self._sistemas(r)
@@ -333,7 +332,7 @@ class JanelaAnalise(QWidget):
                             for c in nome.split(">"))
             t = QLabel(f"{bolas}&nbsp; {nome}"); t.setTextFormat(Qt.TextFormat.RichText)
             t.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-            v = QLabel(f"<b>{s['n']}</b> talhão(ões)"
+            v = QLabel(f"<b>{s['n']}</b> {'ponto' if s['n'] == 1 else 'pontos'}"
                        + (f" · {_br(s['ha'], 1)} ha" if s["ha"] else ""))
             v.setObjectName("dica"); v.setTextFormat(Qt.TextFormat.RichText)
             v.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -398,15 +397,15 @@ class JanelaAnalise(QWidget):
             linhas = [p for p, _m in r["conferir"]]
             self.t_lista.setText("Para conferir")
             self.dica_lista.setText("tudo em ordem" if not linhas else
-                                    f"{len(linhas)} de {r['n']} talhão(ões)")
+                                    f"{len(linhas)} de {plural(r['n'], 'ponto', 'pontos')}")
         elif filtro == "*":
             linhas = self._pts
             self.t_lista.setText("Todos os talhões")
-            self.dica_lista.setText(f"{len(linhas)} talhão(ões)")
+            self.dica_lista.setText(plural(len(linhas), "ponto", "pontos"))
         else:
             linhas = [p for p in self._pts if _sistema(p) == filtro]
             self.t_lista.setText(filtro)
-            self.dica_lista.setText(f"{len(linhas)} talhão(ões)")
+            self.dica_lista.setText(plural(len(linhas), "ponto", "pontos"))
             self.bt_todos.setChecked(False)
         self.tab.setRowCount(len(linhas))
         for i, p in enumerate(linhas):

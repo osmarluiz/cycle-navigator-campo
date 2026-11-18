@@ -49,7 +49,12 @@ def instala(ctx):
     def exclui_ponto(row, col):
         if p_pontos.store is None:
             return
-        if QMessageBox.question(tabs, "Excluir", "Excluir este ponto rotulado?"
+        # ⚠️ a pergunta DIZ o que vai ser excluido: "este ponto" nao deixava ver que se estava na aba
+        # de pontos e nao na de fazendas
+        alvo = p_pontos.store.find_at(row, col) or {}
+        que = f"o ponto nº {alvo.get('id', '?')} ({alvo.get('class') or 'sem cultura'}"
+        que += f", {alvo['produtor']})" if alvo.get("produtor") else ")"
+        if QMessageBox.question(tabs, "Excluir ponto", f"Excluir {que}?\n\nAs fazendas não são afetadas."
                                 ) != QMessageBox.StandardButton.Yes:
             return
         # ⚠️ o excluido fica guardado (so' o ultimo, so' enquanto o programa esta' aberto): com o

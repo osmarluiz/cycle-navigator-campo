@@ -22,6 +22,7 @@ from PyQt6.QtWidgets import (QAbstractItemView, QHBoxLayout, QHeaderView, QLabel
                              QPushButton, QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from . import estilo
+from .texto import data_br, plural
 from .fazendas import COLUNAS as COL_FAZ, COR_STATUS
 
 log = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ def resumo_faixas(pt):
         return pt.get("class", "")
     partes = []
     for s in cic:
-        dúvida = "" if s.get("confianca") == "certo" else f" [{s.get('confianca')}]"
+        dúvida = "" if s.get("confianca") == "certo" else f" [{ROTULO_CONF.get(s.get('confianca'), '?').lower()}]"
         partes.append(f"{s.get('cultura') or '?'} ({_m(s.get('mes_ini'))}→"
                       f"{_m(s.get('mes_fim'))}){dúvida}")
     return " · ".join(partes)
@@ -94,7 +95,8 @@ def _tabela(colunas):
     t.setAlternatingRowColors(True)
     t.setShowGrid(False)
     t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-    t.horizontalHeader().setStretchLastSection(True)
+    t.horizontalHeader().setStretchLastSection(True)      # cabecalho alinhado como o conteudo:
+    t.horizontalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
     return t
 
 
@@ -142,7 +144,7 @@ class AbaFazendas(QWidget):
         self.vazio.setVisible(not tem)
         for x in (self.bt_dados, self.bt_contorno, self.bt_excluir, self.bt_exp):
             x.setEnabled(tem)
-        self.lb.setText(f"{len(cadastro)} fazenda(s)" if tem else "")
+        self.lb.setText(plural(len(cadastro), "fazenda", "fazendas") if tem else "")
         if not tem:
             self.tab.setRowCount(0)
             return
@@ -234,7 +236,7 @@ class AbaPontos(QWidget):
             n += not some
         total = self.tab.rowCount()
         if total:
-            self.lb.setText(f"{n} de {total} talhão(ões)" if palavras else self._contagem)
+            self.lb.setText(f"{n} de {total}" if palavras else self._contagem)
 
     def lista(self, store):
         pts = list(store.points) if store is not None else []
@@ -244,7 +246,7 @@ class AbaPontos(QWidget):
         for x in (self.bt_ir, self.bt_excluir, self.bt_exp):
             x.setEnabled(bool(pts))
         nf = sum(len(p.get("ciclos") or []) for p in pts)
-        self._contagem = f"{len(pts)} talhão(ões) · {nf} faixa(s)" if pts else ""
+        self._contagem = f"{plural(len(pts), 'ponto', 'pontos')} · {plural(nf, 'faixa', 'faixas')}" if pts else ""
         self.lb.setText(self._contagem)
         self.tab.setSortingEnabled(False)
         self.tab.setRowCount(len(pts))
@@ -262,7 +264,7 @@ class AbaPontos(QWidget):
                 elif k in ("x", "y"):
                     txt = f"{v:.0f}" if v is not None else ""
                 else:
-                    txt = str(v or "")
+                    txt = data_br(v) if k == "gravado_em" else str(v or "")
                 it = _Celula(txt, (float(v) if v else 0.0) if k in NUMERICAS else None)
                 if k in NUMERICAS:
                     it.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)

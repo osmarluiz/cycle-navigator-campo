@@ -188,8 +188,8 @@ class CamadaCAR:
             row("Condição", d["car_condicao"])
         if d["car_atualizado"]:
             row("Atualizado", d["car_atualizado"])
-        linhas.append("<div style='color:#767a6c;font-size:11px;margin-top:6px'>Editar fazenda → "
-                      "clique nele para adotar · Esc limpa</div>")
+        linhas.append("<div style='color:#8f9383;font-size:11px;margin-top:6px'>para adotar: "
+                      "Desenhar → Copiar contorno · Esc limpa</div>")
         return "".join(linhas)
 
     def redesenha(self, *_):
@@ -310,9 +310,9 @@ def html_sam(a, area_medida):
     d = dados_do_sam(a)
     area = f"{(area_medida or float(a.get('area_ha') or 0)):,.1f}".replace(",", ".")
     return ("<div style='font-size:13px;font-weight:600;margin-bottom:4px'>Talhão (SAM)</div>"
-            f"<div style='color:#a9ac9c;font-size:11px;margin-bottom:6px'>segmento #{d['sam_id']}</div>"
+            f"<div style='color:#a9ac9c;font-size:11px;margin-bottom:6px'>contorno pronto nº {d['sam_id']}</div>"
             f"<div><span style='color:#a9ac9c'>Área</span>&nbsp; <b>{area}</b> ha</div>"
             f"<div><span style='color:#a9ac9c'>Confiança do modelo</span>&nbsp; IoU {d['sam_iou']:.2f} · "
             f"estabilidade {d['sam_estab']:.2f}</div>"
-            "<div style='color:#767a6c;font-size:11px;margin-top:6px'>contorno automático: confira as "
-            "bordas antes de adotar · Editar fazenda → clique nele · Esc limpa</div>")
+            "<div style='color:#8f9383;font-size:11px;margin-top:6px'>contorno automático: confira as "
+            "bordas · para adotar: Desenhar → Copiar contorno · Esc limpa</div>")

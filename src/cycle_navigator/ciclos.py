@@ -50,7 +50,9 @@ MES_CURTO = {1: "jan", 2: "fev", 3: "mar", 4: "abr", 5: "mai", 6: "jun",
 # fraca, ou inflar a parte fraca por causa da forte -- as duas saidas sao mentira.
 CONFIANCA = ["certo", "acho que", "nao sei"]
 CONF_ROTULO = {"certo": "Certo", "acho que": "Acho que", "nao sei": "Não sei"}
-ALFA = {"certo": 110, "acho que": 70, "nao sei": 40}
+# ⚠️ a faixa e' um VEU sobre a curva, nao um bloco: com 110 de 255 uma faixa de ano inteiro virava
+# um retangulo laranja e a curva -- que e' o dado -- sumia dentro dele.
+ALFA = {"certo": 62, "acho que": 40, "nao sei": 22}
 COR_FOCO = estilo.FOCO
 COR_FUNDO = estilo.TEXT_3
 COR_CURVA = estilo.ACCENT

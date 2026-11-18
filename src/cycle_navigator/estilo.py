@@ -34,7 +34,7 @@ BORDER_STRONG = "#454c36"
 
 TEXT = "#ecebe0"
 TEXT_2 = "#a9ac9c"      # rotulos de campo, legendas
-TEXT_3 = "#767a6c"      # dicas, estados vazios
+TEXT_3 = "#8f9383"      # dicas, estados vazios (4,5:1 sobre PANEL e RAISED: o minimo para ler)
 
 ACCENT = "#8fc452"      # a acao primaria (Gravar, modo ativo)
 ACCENT_HOVER = "#a1d463"
@@ -220,7 +220,7 @@ QPushButton#linha:hover {{ background:{HOVER}; border-color:{BORDER}; }}
 QLabel#marca {{ font-size:15px; font-weight:600; color:{TEXT}; }}
 QLineEdit#busca {{ border-radius:16px; padding-left:34px; background:{RAISED}; }}
 QPushButton#contagem {{ background:{RAISED}; color:{TEXT_2}; border:1px solid {BORDER};
-                        border-radius:14px; padding:4px 12px; font-size:12px; font-weight:600;
+                        border-radius:10px; padding:4px 12px; font-size:12px; font-weight:600;
                         min-height:0; }}
 QPushButton#contagem:hover {{ background:{HOVER}; color:{TEXT}; border-color:{ACCENT}; }}
 

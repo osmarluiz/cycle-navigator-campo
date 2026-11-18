@@ -59,7 +59,7 @@ def instala(ctx):
         except Exception as e:
             QMessageBox.warning(tabs, "Exportar", str(e))
             return
-        QMessageBox.information(tabs, "Exportar", f"{n} feição(ões) em\n{dest}")
+        QMessageBox.information(tabs, "Exportar", f"{n} {'feição' if n == 1 else 'feições'} em\n{dest}")
 
     def _qual(fid):
         """⚠️ Botao da tabela sem linha escolhida nao fazia nada, calado. Com uma fazenda so' nao ha'
