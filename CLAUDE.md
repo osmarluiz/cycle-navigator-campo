@@ -267,3 +267,36 @@ O build do GitHub Actions **não** instala torch/sam2: os pacotes de lá saem se
 
 **Sem teste até aqui**: "Onde estou" (depende da permissão do macOS), e tudo o que é novo neste
 dia em Windows e em Mac Intel.
+
+## 11. Depois da reunião com a cooperativa (2026-11-18, tarde)
+
+O Osmar usou o programa com a cooperativa e voltou com um reparo de fundo: **estávamos misturando
+coisas**. O que ficou decidido, e não deve ser desfeito:
+
+- **Há duas informações distintas: a do PIXEL e a da FAZENDA.** Identificar só **lê**: a série do
+  pixel (ou, se pedida, a média do talhão pronto) e a fazenda do lugar, em linhas separadas do
+  cabeçalho. Identificar **não recorta**; a origem da curva é `Pixel | Média do talhão`, padrão Pixel.
+- **O SAM é ferramenta de desenho**, não fonte de informação. Mora no modo Desenhar, na barra de
+  ferramentas (`barra_desenho.py`): `Polígono | Automático | Copiar contorno`, com Desfazer,
+  Concluir e Cancelar e a dica do próximo clique. ⇧ soma e ⌥ tira valem só no Automático.
+- **O contorno do CAR/talhão só é copiado pela ferramenta Copiar**: antes, começar um polígono à
+  mão dentro de um imóvel com a camada ligada copiava o contorno sem ninguém pedir.
+- **As faixas são uma lista ao lado da curva** (`lista_faixas.py`), uma linha por faixa com número,
+  período, cultura e confiança. A fila de chips não aguentava cinco faixas.
+- Bordas das faixas com cursor ↔.
+
+**Armadilhas desse dia**:
+
+- ⚠️ **O atalho de Enter da janela chega antes do campo de texto**: a busca só funcionava pelo que
+  se escolhia na lista de sugestões. `JanelaCampo._enter` entrega o Enter ao campo em foco. Teste
+  de busca tem de apertar Enter de verdade (`QTest.keyClick`), não chamar `procura()`.
+- ⚠️ **A aba Fazendas ficava desabilitada no modo Desenhar** (onde se fica depois de desenhar).
+- ⚠️ **O autoteste apagava o log do programa aberto ao lado** (mesmo arquivo, `filemode="w"`).
+  Agora escreve em `cycle-navigator-autoteste.log`.
+- ⚠️ **A tabela passou a abrir em "Talhões levantados"**; no mesmo dia os dois talhões da safra
+  sumiram às 15:38 e não se sabe se foi exclusão por engano. A exclusão de talhão ainda não diz o
+  nome do que vai excluir (a de fazenda diz). Fazer.
+
+**Ainda por fazer do que ele pediu**: os comandos de edição de vértice continuam os do
+`PolyLineROI` (arrastar, clicar na linha, botão direito apaga) — falta desfazer no ajuste e snap;
+editar atributos direto na tabela; todas as safras numa tabela só.

@@ -140,14 +140,13 @@ QPushButton#modo {{ border-radius:8px; padding:0 16px; }}
 QPushButton#modo:checked {{ background:{ACCENT}; color:{ON_ACCENT}; border-color:{ACCENT}; }}
 QPushButton#modo:checked:hover {{ background:{ACCENT_HOVER}; }}
 
-/* chips das faixas */
-QPushButton#chip {{ border-top-right-radius:0; border-bottom-right-radius:0; padding:0 12px;
-                    min-height:28px; }}
-QPushButton#chip:checked {{ background:{FOCO}; color:{ON_ACCENT}; border-color:{FOCO};
-                            font-weight:600; }}
-QToolButton#chipx {{ border-top-left-radius:0; border-bottom-left-radius:0; border-left:none;
-                     min-height:28px; min-width:28px; max-width:28px; padding:0; color:{TEXT_2}; }}
-QToolButton#chipx:hover {{ color:{PERIGO}; background:{HOVER}; }}
+/* a lista das faixas, ao lado da curva */
+QFrame#faixa_linha {{ border:1px solid transparent; border-radius:8px; min-height:26px; }}
+QFrame#faixa_linha:hover {{ background:{HOVER}; }}
+QFrame#faixa_linha[aceso="true"] {{ background:{RAISED}; border-color:{FOCO}; }}
+QLabel#faixa_periodo {{ color:{TEXT_2}; font-size:12px; }}
+QToolButton#faixa_x {{ border:none; background:transparent; min-width:24px; max-width:24px; min-height:24px; }}
+QToolButton#faixa_x:hover {{ background:{HOVER}; border-radius:6px; }}
 
 /* perigo */
 QPushButton#perigo:hover {{ border-color:{PERIGO}; color:{PERIGO}; }}

@@ -12,7 +12,7 @@ import cycle_navigator
 RAIZ = Path(cycle_navigator.__file__).parent
 LIMITE = 300
 # ⚠️ divida conhecida, anterior ao padrao: entram no limite quando forem cortados. Nao acrescentar.
-GRANDES = {"ciclos.py": 900, "janela.py": 500, "analise.py": 440, "fazendas.py": 360, "car.py": 320}
+GRANDES = {"ciclos.py": 850, "janela.py": 500, "analise.py": 440, "fazendas.py": 360, "car.py": 320}
 
 
 def _linhas(p):

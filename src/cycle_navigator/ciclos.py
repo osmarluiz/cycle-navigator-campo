@@ -32,12 +32,13 @@ import pheno_engine
 import pyqtgraph as pg
 import qtawesome as qta
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QIcon
+from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtWidgets import (QButtonGroup, QComboBox, QCompleter, QHBoxLayout, QLabel, QLineEdit,
                              QMenu, QPushButton, QSlider, QToolButton, QVBoxLayout, QWidget,
                              QWidgetAction)
 
 from . import estilo
+from .lista_faixas import ListaFaixas
 
 log = logging.getLogger(__name__)
 
@@ -154,42 +155,6 @@ class Segmentado(QWidget):
         return None
 
 
-class Chip(QWidget):
-    """Uma faixa na fila: clica para focar, ✕ para apagar.
-
-    ⚠️ O apagar mora AQUI, no proprio chip. Antes era um botao "remover faixa" la' embaixo, que
-    apagava a faixa em foco -- so' que para apagar a faixa 2 era preciso primeiro focar a faixa 2,
-    e nada na tela dizia isso. Apagar o que se esta' vendo e' um gesto, nao dois.
-    """
-
-    focar = pyqtSignal()
-    apagar = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        lay = QHBoxLayout(self)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(0)
-        self.bt = QPushButton()
-        self.bt.setObjectName("chip")
-        self.bt.setCheckable(True)
-        self.bt.clicked.connect(self.focar)
-        self.x = QToolButton()
-        self.x.setObjectName("chipx")
-        self.x.setIcon(qta.icon("mdi6.close", color=estilo.TEXT_2, color_active=estilo.PERIGO))
-        self.x.setIconSize(QSize(14, 14))
-        self.x.setToolTip("apagar esta faixa")
-        self.x.clicked.connect(self.apagar)
-        lay.addWidget(self.bt)
-        lay.addWidget(self.x)
-
-    def texto(self, t, aceso, cor=None):
-        self.bt.setText(t)
-        self.bt.setChecked(aceso)
-        self.bt.setIcon(qta.icon("mdi6.circle", color=cor) if cor else QIcon())
-        self.bt.setIconSize(QSize(10, 10))
-
-
 class PainelCiclo(QWidget):
     """A curva do talhao clicado e as faixas que o produtor for contando."""
 
@@ -299,7 +264,9 @@ class PainelCiclo(QWidget):
             a.setPen(pg.mkPen(estilo.BORDER_STRONG))
             a.setTextPen(pg.mkPen(estilo.TEXT_2))
         self.plot.setCursor(Qt.CursorShape.PointingHandCursor)
-        lay.addWidget(self.plot, 1)
+        meio = QHBoxLayout(); esq = QVBoxLayout(); meio.addLayout(esq, 1)
+        lay.addLayout(meio, 1)
+        esq.addWidget(self.plot, 1)
 
         self.geral = pg.PlotWidget()
         self.geral.setFixedHeight(40)
@@ -319,19 +286,15 @@ class PainelCiclo(QWidget):
         [li.setCursor(Qt.CursorShape.SizeHorCursor) for li in self.janela.lines]
         self.geral.addItem(self.janela)
         self.janela.sigRegionChanged.connect(self._janela_mudou)
-        lay.addWidget(self.geral)
+        esq.addWidget(self.geral)
+        self.lista = ListaFaixas()          # uma linha por faixa (ver lista_faixas.py)
+        self.lista.focar.connect(self._foca); self.lista.apagar.connect(self._apaga)
+        meio.addWidget(self.lista)
 
         # ---------------- fileira 1: as faixas, quem respondeu, gravar ----------------
         f1 = self._f1 = QHBoxLayout()
         f1.setSpacing(6)
-        f1.addWidget(_rot("Faixas"))
-        self.fila = QHBoxLayout()
-        self.fila.setSpacing(6)
-        f1.addLayout(self.fila)
-        self.bt_add = QPushButton("faixa"); self.bt_add.setObjectName("ghost")
-        self.bt_add.setIcon(qta.icon("mdi6.plus", color=estilo.TEXT)); self.bt_add.setIconSize(QSize(16, 16))
-        self.bt_add.setToolTip("faixa nova (ou arraste na curva, num trecho vazio)")
-        f1.addWidget(self.bt_add)
+        self.bt_add = self.lista.bt_add
         f1.addStretch(1)
         f1.addWidget(_rot("Produtor"))
         self.ed_produtor = QLineEdit()
@@ -421,7 +384,7 @@ class PainelCiclo(QWidget):
             w.setEnabled(on)
         # o que nao tem o que mostrar fica fora da tela, nao vazio nela
         self.vazio.setVisible(not on)
-        for w in (self.plot, self.geral, self.titulo, self.subtitulo, self.lb_faixa,
+        for w in (self.plot, self.geral, self.titulo, self.subtitulo, self.lb_faixa, self.lista,
                   self.seg_fonte, self.seg_janela, self.bt_ajustes, self.seg_conf):
             w.setVisible(on)
         for fila in (self._f1, self._f2, self.rapidas):
@@ -734,6 +697,7 @@ class PainelCiclo(QWidget):
         f["ini"], f["fim"] = ia, ib
         if 0 <= self._foco < len(self._faixas) and self._faixas[self._foco] is f:
             self._mostra_foco()
+        self._texto_chip(self._faixas.index(f))      # a linha da lista mostra o periodo novo
         self._pinta()
 
     def _apaga(self, i):
@@ -807,8 +771,7 @@ class PainelCiclo(QWidget):
             self.lb_faixa.setText("—")
             self.ed_cultura.setCurrentText("")
         self._pinta()
-        for j, c in enumerate(self._chips()):
-            c.bt.setChecked(j == self._foco)
+        self.lista.foca(self._foco)
 
     def _mostra_foco(self):
         f = self._faixas[self._foco]
@@ -830,29 +793,17 @@ class PainelCiclo(QWidget):
         self.seg_conf.marca(f["confianca"])
         self._marca_rapida(f["cultura"])
 
-    def _chips(self):
-        return [self.fila.itemAt(i).widget() for i in range(self.fila.count())
-                if self.fila.itemAt(i).widget()]
-
     def _refaz_chips(self):
-        while self.fila.count():
-            w = self.fila.takeAt(0).widget()
-            if w:
-                w.setParent(None)
-        for i in range(len(self._faixas)):
-            c = Chip()
-            c.focar.connect(lambda i=i: self._foca(i))
-            c.apagar.connect(lambda i=i: self._apaga(i))
-            self.fila.addWidget(c)
+        self.lista.refaz(len(self._faixas))
         for i in range(len(self._faixas)):
             self._texto_chip(i)
 
     def _texto_chip(self, i):
-        chips = self._chips()
-        if 0 <= i < len(chips):
+        if 0 <= i < len(self._faixas):
             f = self._faixas[i]
-            chips[i].texto(f"{i + 1}. {f['cultura'] or '?'}", i == self._foco,
-                           self.cor_de(f["cultura"]))
+            per = f"{rotulo_mes(self.meses[f['ini']])} → {rotulo_mes(self.meses[f['fim']])}"
+            conf = "" if f["confianca"] == CONFIANCA[0] else CONF_ROTULO[f["confianca"]].lower()
+            self.lista.texto(i, per, f["cultura"], conf, i == self._foco, self.cor_de(f["cultura"]))
 
     def _pinta(self):
         """Cada faixa na cor da sua cultura; a em foco acesa, a duvida mais apagada que a certeza."""
