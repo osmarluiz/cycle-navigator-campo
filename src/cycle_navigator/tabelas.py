@@ -18,8 +18,8 @@ import logging
 import pyqtgraph as pg
 import qtawesome as qta
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (QAbstractItemView, QHBoxLayout, QHeaderView, QLabel, QPushButton,
-                             QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QAbstractItemView, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
+                             QPushButton, QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from . import estilo
 from .fazendas import COLUNAS as COL_FAZ, COR_STATUS
@@ -28,8 +28,39 @@ log = logging.getLogger(__name__)
 
 COL_PTS = [("id", "ID"), ("fazenda", "Fazenda"), ("produtor", "Produtor"),
            ("period", "Safra"), ("faixas", "O que foi plantado"),
+           ("talhao_ha", "Área (ha)"), ("confianca", "Confiança"), ("fonte_curva", "Contorno"),
            ("levantador", "Levantador"), ("gravado_em", "Gravado em"),
            ("x", "X (UTM)"), ("y", "Y (UTM)")]
+NUMERICAS = {"id", "talhao_ha", "x", "y"}
+FONTE = {"talhao": "Talhão", "recorte": "Recorte", "pixel": "Ponto"}
+# a pior das faixas e' a confianca do talhao: uma duvida numa faixa e' uma duvida no sistema
+ORDEM_CONF = {"certo": 0, "acho que": 1, "nao sei": 2}
+ROTULO_CONF = {"certo": "Certo", "acho que": "Acho que", "nao sei": "Não sei"}
+
+
+def confianca_do_ponto(pt):
+    cs = [s.get("confianca") or "certo" for s in (pt.get("ciclos") or [])]
+    return ROTULO_CONF.get(max(cs, key=lambda c: ORDEM_CONF.get(c, 0)), "") if cs else ""
+
+
+def _sem_acento(t):
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", str(t).lower())
+                   if unicodedata.category(c) != "Mn")
+
+
+class _Celula(QTableWidgetItem):
+    """⚠️ Coluna de numero ordena como numero: como texto, 100 ha vinha antes de 20 ha."""
+
+    def __init__(self, txt, valor=None):
+        super().__init__(txt)
+        self.valor = valor
+
+    def __lt__(self, outra):
+        a, b = self.valor, getattr(outra, "valor", None)
+        if a is not None and b is not None:
+            return a < b
+        return super().__lt__(outra)
 
 MES = {1: "jan", 2: "fev", 3: "mar", 4: "abr", 5: "mai", 6: "jun",
        7: "jul", 8: "ago", 9: "set", 10: "out", 11: "nov", 12: "dez"}
@@ -148,6 +179,12 @@ class AbaPontos(QWidget):
         self.vazio.setObjectName("vazio")
         self.vazio.setWordWrap(True)
         lay.addWidget(self.vazio)
+        self.ed_filtro = QLineEdit()
+        self.ed_filtro.setObjectName("busca")
+        self.ed_filtro.setPlaceholderText("Filtrar: cultura, produtor, fazenda, levantador…")
+        self.ed_filtro.setClearButtonEnabled(True)
+        self.ed_filtro.textChanged.connect(self._filtra)
+        lay.addWidget(self.ed_filtro)
         self.tab = _tabela(COL_PTS)
         self.tab.cellDoubleClicked.connect(self._ir)
         lay.addWidget(self.tab, 1)
@@ -181,29 +218,56 @@ class AbaPontos(QWidget):
         if rc:
             self.excluir.emit(*rc)
 
+    def _filtra(self, *_):
+        """Todas as palavras digitadas tem de aparecer na linha, em qualquer coluna, sem ligar para
+        acento nem maiuscula. So' esconde linhas: nada e' alterado."""
+        palavras = _sem_acento(self.ed_filtro.text()).split()
+        n = 0
+        for i in range(self.tab.rowCount()):
+            linha = _sem_acento(" ".join(self.tab.item(i, j).text() for j in range(self.tab.columnCount())
+                                         if self.tab.item(i, j) is not None))
+            some = any(p not in linha for p in palavras)
+            self.tab.setRowHidden(i, some)
+            n += not some
+        total = self.tab.rowCount()
+        if total:
+            self.lb.setText(f"{n} de {total} talhão(ões)" if palavras else self._contagem)
+
     def lista(self, store):
         pts = list(store.points) if store is not None else []
+        self.ed_filtro.setVisible(bool(pts))
         self.tab.setVisible(bool(pts))
         self.vazio.setVisible(not pts)
         for x in (self.bt_ir, self.bt_excluir, self.bt_exp):
             x.setEnabled(bool(pts))
         nf = sum(len(p.get("ciclos") or []) for p in pts)
-        self.lb.setText(f"{len(pts)} talhão(ões) · {nf} faixa(s)" if pts else "")
+        self._contagem = f"{len(pts)} talhão(ões) · {nf} faixa(s)" if pts else ""
+        self.lb.setText(self._contagem)
         self.tab.setSortingEnabled(False)
         self.tab.setRowCount(len(pts))
         for i, p in enumerate(pts):
             for j, (k, _r) in enumerate(COL_PTS):
+                v = p.get(k)
                 if k == "faixas":
                     txt = resumo_faixas(p)
+                elif k == "confianca":
+                    txt = confianca_do_ponto(p)
+                elif k == "fonte_curva":
+                    txt = FONTE.get(v, "")
+                elif k == "talhao_ha":
+                    txt = f"{v:.1f}".replace(".", ",") if v else ""
                 elif k in ("x", "y"):
-                    txt = f"{p.get(k):.0f}" if p.get(k) is not None else ""
+                    txt = f"{v:.0f}" if v is not None else ""
                 else:
-                    txt = str(p.get(k, "") or "")
-                it = QTableWidgetItem(txt)
+                    txt = str(v or "")
+                it = _Celula(txt, (float(v) if v else 0.0) if k in NUMERICAS else None)
+                if k in NUMERICAS:
+                    it.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 if j == 0:
                     it.setData(Qt.ItemDataRole.UserRole, (int(p["row"]), int(p["col"])))
                 self.tab.setItem(i, j, it)
         self.tab.setSortingEnabled(True)
+        self._filtra()
 
 
 class JanelaTabelas(QWidget):
@@ -212,12 +276,13 @@ class JanelaTabelas(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Tabelas de atributos")
-        self.resize(1040, 420)
+        self.resize(1400, 480)
         self.fazendas = AbaFazendas()
         self.pontos = AbaPontos()
         self.abas = QTabWidget()
         self.abas.addTab(self.fazendas, "Fazendas")
-        self.abas.addTab(self.pontos, "Pontos rotulados")
+        self.abas.addTab(self.pontos, "Talhões levantados")
+        self.abas.setCurrentIndex(1)     # abre no que se veio ver: o que ja' foi levantado
         lay = QVBoxLayout(self)
         lay.setContentsMargins(8, 4, 8, 8)
         lay.addWidget(self.abas)

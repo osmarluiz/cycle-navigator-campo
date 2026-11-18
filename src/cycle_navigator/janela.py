@@ -141,7 +141,7 @@ class BarraTopo(QWidget):
         cl = QHBoxLayout(caixa); cl.setContentsMargins(0, 0, 0, 0); cl.setSpacing(0)
         self.ed_busca = QLineEdit()
         self.ed_busca.setObjectName("busca")
-        self.ed_busca.setPlaceholderText("Buscar lugar, CAR ou coordenada")
+        self.ed_busca.setPlaceholderText("Buscar lugar…")
         self.ed_busca.setMinimumWidth(130)
         self.ed_busca.setMaximumWidth(360)
         self.ed_busca.setClearButtonEnabled(True)
