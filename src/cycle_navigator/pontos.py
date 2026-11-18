@@ -128,7 +128,7 @@ class PainelPontos(QWidget):
         if self._arq_lev and self._arq_lev.exists():
             try:
                 self.ed_levantador.setText(self._arq_lev.read_text(encoding="utf-8").strip())
-            except OSError as e:
+            except (OSError, ValueError) as e:      # ValueError: arquivo com bytes que nao sao texto
                 log.warning("nao li o levantador anterior: %s", e)
         self.ed_levantador.editingFinished.connect(self._salva_levantador)
 
@@ -269,4 +269,16 @@ def abre_store(cfg, safra, transform, crs):
     pasta = cfg.pasta_pontos
     pasta.mkdir(parents=True, exist_ok=True)
     caminho = pasta / f"pontos_{safra.replace('/', '_')}.json"
-    return AnnotationStore(str(caminho), transform=transform, crs=crs, period=safra)
+    try:
+        store = AnnotationStore(str(caminho), transform=transform, crs=crs, period=safra)
+        store.danificado = None
+    except (ValueError, AttributeError, TypeError) as e:
+        # ⚠️⚠️ ARQUIVO DANIFICADO NAO E' APAGADO NEM SOBRESCRITO. Sem isto o programa nem abria; e
+        # "abrir vazio e gravar por cima" perderia o que ainda da' para recuperar de dentro dele.
+        # O arquivo e' posto de lado com outro nome e a safra comeca vazia, COM AVISO na tela.
+        from .arquivos import guarda_danificado
+        lado = guarda_danificado(caminho)
+        log.error("pontos ilegiveis (%s): %s -- guardado em %s", caminho.name, e, lado.name)
+        store = AnnotationStore(str(caminho), transform=transform, crs=crs, period=safra)
+        store.danificado = lado
+    return store

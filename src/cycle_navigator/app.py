@@ -11,10 +11,15 @@ import argparse
 import logging
 import sys
 
+import warnings
+from collections import Counter
+
 import numpy as np
+import pyqtgraph as pg
 import rasterio
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import (QApplication, QCompleter, QDialog, QFileDialog, QMessageBox,
+                             QToolButton)
 
 # ⚠️ TUDO que se importa daqui existe no ts-annotator PUBLICO. A versao anterior usava
 # `ui.continuum_window` e `ui.phenology_panel`, que so' existem num clone local nao publicado --
@@ -30,6 +35,12 @@ from .ciclos import PainelCiclo
 from .config import ConfiguracaoAusente, carrega
 from . import estilo
 from . import exporta
+from .analise import JanelaAnalise
+from .busca import Indice
+from .posicao import OndeEstou
+from .recorte import RecorteVivo
+from .sugestoes import Caixa
+from .janela_sugestoes import JanelaSugestoes
 from .car import (COR_SAM, CamadaCAR, dados_do_car, dados_do_sam, html_sam,
                   resumo as resumo_car)
 from .fazendas import CadastroFazendas, CamadaFazendas, DesenhoPoligono, DialogoFazenda
@@ -39,133 +50,10 @@ from .tabelas import JanelaTabelas
 
 log = logging.getLogger(__name__)
 
-
-def cinza(nodata=0, escurece=0.55):
-    """RGB medio -> cinza escurecido: base neutra para o eixo colorido saltar."""
-    def fn(arr):
-        g = arr[:3].astype(np.float32).mean(0)
-        gv = np.clip(g * escurece, 0, 255).astype(np.uint8)
-        rgba = np.dstack([gv, gv, gv, np.full(gv.shape, 255, np.uint8)])
-        rgba[(arr[:3].sum(0) == nodata * 3), 3] = 0
-        return rgba
-    return fn
-
-
-def _tabela_de_ciclos(pred_tif):
-    """idx da predicao -> numero de ciclos, lido do sidecar .json do proprio raster.
-
-    ⚠️ le' os rotulos do arquivo em vez de assumir a ordem das classes. A ordem muda entre modelos, e
-    uma tabela escrita a mao aponta para a classe errada sem avisar.
-    """
-    import json
-    import re
-    labs = json.load(open(str(pred_tif).replace(".tif", ".json"), encoding="utf-8"))["labs"]
-    lut = np.zeros(256, np.float32)
-    for i, l in enumerate(labs):
-        if l.startswith("Cultivo") and "perene" not in l.lower():
-            m = re.search(r"(\d)", l)
-            if m:
-                lut[i] = int(m.group(1))
-    return lut
-
-
-def serie(cfg, safra_ou_meses, T):
-    """A serie temporal de um ano-safra (nome) ou de uma lista de meses, na grade da base.
-
-    ⚠️ Carregar a serie inteira aqui e' seguro -- o que NAO pode e' entregar 54 meses de uma vez ao
-    motor fenometrico, que pressupoe doze meses a partir de outubro (`derive_feat` tem os meses da
-    seca fixos nos indices 8..12). Quem cuida disso e' `ciclos.deteccao`, que fatia por ano-safra
-    antes de chamar o motor. Entregar a serie toda nao daria erro -- daria numero, e errado.
-    """
-    meses = (cfg.meses_de(safra_ou_meses) if isinstance(safra_ou_meses, str)
-             else list(safra_ou_meses))
-    arquivos = [str(cfg.aoi / "cube" / f"ride_{m}_aoi.tif") for m in meses]
-    # cada mes pode estar deslocado em relacao a' base; o deslocamento sai do proprio geotransform
-    offs = [round((rasterio.open(f).transform.f - T.f) / T.a) for f in arquivos]
-    ts = TimeSeriesSource(arquivos, bands=(1, 2, 3, 4), row_offsets=offs, nodata=65535, scale=10000)
-    if not ts.has_overviews:
-        log.warning("⚠️ %d mes(es) sem overviews: a navegacao vai ler em resolucao cheia e travar "
-                    "em area grande. Gere com: gdaladdo -r average <mes>.tif 2 4 8 16 32",
-                    len(arquivos))
-    return ts
-
-
-# Esticamento FIXO do RGB dos meses (bandas do cubo: 1=B 2=G 3=R 4=NIR -> indices 0..3).
-# ⚠️ FIXO, nao por-viewport: o ponto de ver mes a mes e' COMPARAR os meses entre si. Um esticamento
-# recalculado a cada vista deixa todo mes com a mesma cara e some com a diferenca que se queria ver.
-# Os valores do RGB natural vem do projeto ride_review, ajustados nesta cena.
-RGB_NAT = {"idx": [2, 1, 0], "lo": [260, 375, 171], "hi": [1879, 1247, 795]}
-RGB_FC = {"idx": [3, 2, 1], "lo": [900, 260, 375], "hi": [4200, 1879, 1247]}
-
-# As camadas que dependem da DATA, e as que resumem o ano inteiro.
-CAMADAS_MES = ["RGB natural", "Falsa-cor (infravermelho)", "NDVI do mês"]
-CAMADAS_ANO = ["NDVI-temporal (ano)", "Fenologia (ano)", "MNF (ano)",
-               "RGB da chuva (jan)", "RGB da seca (ago)", "Classificação"]
-
-
-def cor_ndvi(nodata=65535):
-    """NDVI de um mes cru -> rampa de cor. ⚠️ So' visualizacao: a fenometria vem do pheno_engine."""
-    import pyqtgraph as pg
-    lut = pg.colormap.get("RdYlGn", source="matplotlib").getLookupTable(0.0, 1.0, 256)
-
-    def fn(arr):
-        a = arr.astype(np.float32)
-        red, nir = a[2], a[3]
-        mau = (~np.isfinite(red)) | (~np.isfinite(nir)) | (red == nodata) | (nir == nodata)
-        nd = (nir - red) / (nir + red + 1e-6)
-        i = np.clip(((np.nan_to_num(nd) + 0.2) / 1.2 * 255), 0, 255).astype(np.uint8)
-        rgba = np.dstack([lut[i], np.full(i.shape, 255, np.uint8)])
-        rgba[mau, 3] = 0
-        return rgba
-    return fn
-
-
-def monta(cfg):
-
-    """Abre as fontes e devolve o que a janela precisa."""
-    bm = cfg.basemaps
-    classe = RasterSource(str(bm["classe"]))
-
-    rgb, cinz = make_rgb_colorizer(nodata=0), cinza(nodata=0)
-    ndvi = RasterSource(str(bm["ndvi"]))
-    # ⚠️⚠️ OS ROTULOS TEM DE SER EXATAMENTE OS QUE O COMBO MOSTRA. O `_set_base` do ContinuumWindow
-    # faz `if label in self.basemaps:` e NAO RECLAMA quando nao acha -- so' nao troca o mapa. Este
-    # arquivo chamava as chaves de "Image · NDVI-temporal" (ingles) enquanto o painel listava
-    # "Imagem · NDVI-temporal" (portugues): o seletor funcionava na aparencia e nao fazia nada.
-    # Por isso o combo e' RE-POPULADO a partir deste dicionario (ver `aplica_bases`), em vez de
-    # confiar que duas listas escritas em lugares diferentes continuem iguais.
-    bases = {"Imagem · NDVI-temporal": (ndvi, rgb),
-             "Imagem · Fenologia": (RasterSource(str(bm["pheno"])), rgb),
-             "Imagem · MNF": (RasterSource(str(bm["mnf"])), rgb),
-             "Imagem · Cinza (fundo neutro)": (ndvi, cinz)}
-    for chave, rotulo in (("rgb_chuvoso", "RGB natural · chuva (jan)"),
-                          ("rgb_seco", "RGB natural · seca (ago)")):
-        p = cfg.basemaps_extra[chave]
-        if p.exists():
-            bases[rotulo] = (RasterSource(str(p)), rgb)
-        else:
-            log.info("visualizacao opcional ausente (segue sem ela): %s", p.name)
-    bases["Classificação"] = (classe, make_class_colorizer(CLASS_COLORS, 255))
-
-    pivos = []
-    if cfg.pivos:
-        try:
-            import geopandas as gpd
-            pivos = list(gpd.read_file(str(cfg.pivos)).geometry)
-            log.info("pivot register: %d polygons", len(pivos))
-        except Exception as e:                      # opcional: a ferramenta abre sem isso
-            log.warning("pivot register unavailable (%s): %s", type(e).__name__, e)
-
-    cult, lut = None, None
-    if cfg.predicao:
-        try:
-            cult = RasterSource(str(cfg.predicao))
-            lut = _tabela_de_ciclos(cfg.predicao)
-        except Exception as e:
-            log.warning("cropland prediction unavailable (%s): %s; "
-                        "falling back to the phenological detector", type(e).__name__, e)
-            cult, lut = None, None
-    return classe, bases, ndvi, cinz, pivos, cult, lut
+# as constantes e a leitura dos rasters moram em montagem/fontes.py; ficam visiveis aqui para
+# quem importava de `cycle_navigator.app`
+from .montagem.fontes import CAMADAS_ANO, CAMADAS_MES, RGB_FC, RGB_NAT, _tabela_de_ciclos, _tem_dado, cinza, cor_ndvi, monta, serie  # noqa: F401,E402
+from . import montagem  # noqa: E402
 
 
 def monta_app(cfg, app):
@@ -175,424 +63,21 @@ def monta_app(cfg, app):
     modo. Um crash nativo do Qt (abort em C++) nao vira excecao Python -- so' aparece rodando o
     fluxo de verdade, e com isto da' para rodar num subprocesso e ler o codigo de saida.
     """
-    classe, bases, ndvi, cinz, pivos, cult, lut = monta(cfg)
-
-    safras = list(cfg.safras)
-    safra = safras[-1]
-    log.info("safras disponiveis: %s", ", ".join(safras))
-
-    view = TiledMapView(ndvi, cinz)
-    view.vb.setLimits(xMin=-ndvi.width, xMax=2 * ndvi.width,
-                      yMin=-ndvi.height, yMax=2 * ndvi.height)
-
-    # A serie INTEIRA: a curva precisa poder mostrar todos os meses que existem. Sao 54 leituras de
-    # UM pixel por clique -- barato. A safra so' define a janela que abre ampliada e o arquivo.
-    ts_todo = serie(cfg, cfg.meses, classe.transform)
-
-    cadastro = CadastroFazendas(cfg.pasta_pontos / "fazendas.json", classe.transform, classe.crs)
-    tabs = JanelaTabelas()
-    p_pontos = PainelPontos(cfg.classes, safras,
-                            arquivo_levantador=cfg.pasta_pontos / "_levantador.txt")
-    p_pontos.hide()        # vira so' o deposito dos pontos; a interface dele foi para a barra
-
-    def culturas_usadas():
-        vistas = set(cfg.classes)
-        if p_pontos.store is not None:
-            for pt in p_pontos.store.points:
-                for sg in (pt.get("ciclos") or []):
-                    if sg.get("cultura"):
-                        vistas.add(sg["cultura"])
-        return vistas
-
-    p_ciclo = PainelCiclo(culturas_usadas)
-    win = JanelaCampo(view, safras, CAMADAS_MES + CAMADAS_ANO, p_ciclo)
-    win.resize(1600, 980)
-    win.barra.ed_levantador.setText(p_pontos.levantador)
-    win.barra.ed_levantador.editingFinished.connect(
-        lambda: (p_pontos.ed_levantador.setText(win.barra.ed_levantador.text()),
-                 p_pontos._salva_levantador()))
-
-    cam_pontos = CamadaPontos(view, cfg.classes)
-    cam_faz = CamadaFazendas(view)
-    cam_faz.usar(cadastro)
-    cam_car = CamadaCAR(view, cfg.car, classe.transform, classe.crs) if cfg.car else None
-    if cam_car is not None and cam_car.ok:
-        win.barra.bt_car.show()
-        # ⚠️ visivel em QUALQUER modo enquanto o botao estiver ligado. A versao anterior so' mostrava
-        # no modo Desenhar: quem abria o programa nao via o CAR e nao tinha como clicar em cima.
-        win.barra.carToggled.connect(cam_car.visivel)
-        view.vb.sigRangeChanged.connect(cam_car.redesenha)
-        view.vb.sigRangeChanged.connect(lambda *_: aviso_car())
-        log.info("CAR: %d imoveis como referencia", cam_car.n)
-    else:
-        cam_car = None
-    cam_sam = (CamadaCAR(view, cfg.sam, classe.transform, classe.crs, cor=COR_SAM,
-                         cor_sel="#9fe0ff", titulo="Talhão (SAM)", html=html_sam,
-                         dados=dados_do_sam) if cfg.sam else None)
-    if cam_sam is not None and cam_sam.ok:
-        win.barra.bt_sam.show()
-        win.barra.samToggled.connect(cam_sam.visivel)
-        view.vb.sigRangeChanged.connect(cam_sam.redesenha)
-        log.info("SAM: %d talhoes como referencia", cam_sam.n)
-    else:
-        cam_sam = None
-    # as camadas de contorno, na ordem de prioridade do clique: CAR primeiro, depois SAM
-    camadas = [c for c in (cam_car, cam_sam) if c is not None]
-
-    def sob_o_clique(row, col):
-        """(camada, indice) do poligono visivel sob o pixel, ou (None, None)."""
-        for cam in camadas:
-            if cam._visivel:
-                i = cam.em_idx(row, col)
-                if i is not None:
-                    return cam, i
-        return None, None
-    tabs.fazendas.lista(cadastro)
-    estado = {"safra": safra, "modo": IDENTIFICAR, "mes": None, "camada": CAMADAS_MES[0],
-              "car_semente": "", "semente_dados": {}}
-    _fontes = {}
-
-    # ---------------- camadas ----------------
-    def fonte_mes(m):
-        if m not in _fontes:
-            _fontes[m] = RasterSource(str(cfg.aoi / "cube" / f"ride_{m}_aoi.tif"))
-        return _fontes[m]
-
-    def pinta_mapa():
-        cam, m = estado["camada"], estado["mes"]
-        if cam in CAMADAS_MES and m:
-            src = fonte_mes(m)
-            if cam == "RGB natural":
-                col = make_bands_rgb_colorizer(RGB_NAT["idx"], RGB_NAT["lo"], RGB_NAT["hi"], 65535)
-            elif cam == "Falsa-cor (infravermelho)":
-                col = make_bands_rgb_colorizer(RGB_FC["idx"], RGB_FC["lo"], RGB_FC["hi"], 65535)
-            else:
-                col = cor_ndvi()
-            view.set_source(src, col)
-        else:
-            par = bases.get(cam)
-            if par is not None:
-                view.set_source(*par)
-
-    def usa_camada(nome):
-        estado["camada"] = nome
-        win.barra.data_ativa(nome in CAMADAS_MES)
-        pinta_mapa()
-
-    def usa_data(m):
-        estado["mes"] = int(m)
-        if estado["camada"] in CAMADAS_MES:
-            pinta_mapa()
-
-    def usa_safra(s):
-        estado["safra"] = s
-        store = abre_store(cfg, s, classe.transform, classe.crs)
-        p_pontos.usar(store)
-        cam_pontos.usar(store)
-        meses = cfg.meses_de(s)
-        estado["mes"] = meses[0] if estado["mes"] not in meses else estado["mes"]
-        win.barra.lista_datas(meses, atual=estado["mes"])
-        pinta_mapa()
-        tabs.pontos.lista(store)
-        win.barra.info.setText(f"{len(store)} talhao(oes)")
-        log.info("safra %s: %d talhao(oes)", s, len(store))
-
-    # ---------------- modos ----------------
-    desenho = DesenhoPoligono(view, None)
-
-    def usa_modo(m, fid=None, semente=None):
-        """`semente` = (pontos, cod_car): abre o modo Desenhar ja' com esse contorno editavel."""
-        if estado["modo"] == DESENHAR and m != DESENHAR:
-            desenho.cancela(); cam_faz.oculto = None; cam_faz.redesenha()
-        estado["modo"] = m
-        estado["semente_dados"] = dict(semente[1]) if semente else {}
-        win.barra.mostra_modo(m)
-        if cam_car is not None:
-            aviso_car()
-        tabs.fazendas.setEnabled(m != DESENHAR)
-        if m == DESENHAR:
-            cam_faz.oculto = fid
-            cam_faz.redesenha()
-            if semente:
-                desenho.comeca(None, semente[0])
-            else:
-                desenho.comeca(fid, (cadastro.por_id(fid) or {}).get("poligono") if fid else None)
-        view.setCursor(Qt.CursorShape.CrossCursor if m == DESENHAR
-                       else Qt.CursorShape.ArrowCursor)
-
-    def confirma():
-        """Enter / duplo-clique: fecha o contorno e abre o cadastro."""
-        if estado["modo"] != DESENHAR:
-            return
-        pts = desenho.pontos()
-        if len(pts) < 3:
-            return
-        fid = desenho.editando
-        extra = dict(estado.get("semente_dados") or {})
-        desenho.cancela()
-        cam_faz.oculto = None
-        f = cadastro.salva(fid, pts, extra or None)
-        dlg = DialogoFazenda(f, win)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            dados = dlg.dados()
-            dados.update(extra)          # os dados do CAR nao se editam no formulario
-            f = cadastro.salva(f["id"], None, dados)
-        cam_faz.redesenha()
-        tabs.fazendas.lista(cadastro, selecionar=f["id"])
-        log.info("fazenda #%d: %s (%.1f ha)", f["id"], f.get("nome") or "-", f.get("area_ha") or 0)
-        usa_modo(IDENTIFICAR)
-
-    def cancela():
-        for c in camadas:
-            c.limpa_selecao()
-        if estado["modo"] in (DESENHAR, EDITAR):
-            usa_modo(IDENTIFICAR)
-
-    def no_clique(ev):
-        """⚠️ Roda ANTES do pixelClicked: no modo desenho o clique poe vertice, nao abre talhao."""
-        if estado["modo"] == DESENHAR and desenho.ativo:
-            # ⚠️ CAR como PONTO DE PARTIDA: sem vertice ainda, um clique dentro de um imovel carrega
-            # o contorno dele ja' editavel. A pessoa ajusta ou so' da' Enter e nomeia.
-            if (not desenho.pts and camadas
-                    and ev.button() == Qt.MouseButton.LeftButton and not ev.double()):
-                p = view.vb.mapSceneToView(ev.scenePos())
-                cam, i = sob_o_clique(int(p.y()), int(p.x()))
-                if cam is not None:
-                    cs, rs = cam.aneis[i]
-                    pts = [(float(c), float(r)) for c, r in zip(cs, rs)]
-                    if len(pts) > 2 and pts[0] == pts[-1]:
-                        pts = pts[:-1]
-                    desenho.comeca(None, pts)
-                    estado["semente_dados"] = cam.dados(cam.attr[i])
-                    win.barra.info.setText(f"contorno carregado de {cam.titulo} — ajuste os "
-                                           "vértices ou dê Enter")
-                    return
-            if desenho.clique(ev) and not desenho.ativo:
-                confirma()                      # duplo-clique fechou
-            return
-        if estado["modo"] == EDITAR and ev.double():
-            p = view.vb.mapSceneToView(ev.scenePos())
-            f = cadastro.em(int(p.y()), int(p.x()))
-            if f:
-                dlg = DialogoFazenda(f, win)
-                if dlg.exec() == QDialog.DialogCode.Accepted:
-                    cadastro.salva(f["id"], None, dlg.dados())
-                    cam_faz.redesenha()
-                    tabs.fazendas.lista(cadastro, selecionar=f["id"])
-
-    view.glw.scene().sigMouseClicked.connect(no_clique)
-
-    # ---------------- clique no mapa ----------------
-    def ao_clicar(row, col):
-        if estado["modo"] == DESENHAR:
-            return
-        if estado["modo"] == EDITAR:
-            f = cadastro.em(row, col)
-            if f:
-                tabs.fazendas.lista(cadastro, selecionar=f["id"])
-                usa_modo(DESENHAR, f["id"])      # vertices editaveis
-                return
-            # ⚠️ clicar num imovel do CAR que ainda nao e' fazenda SELECIONA e abre para editar:
-            # o contorno vira poligono editavel na hora, Enter abre o cadastro.
-            cam, i = sob_o_clique(row, col)
-            if cam is not None:
-                cs, rs = cam.aneis[i]
-                pts = [(float(c), float(r)) for c, r in zip(cs, rs)]
-                if len(pts) > 2 and pts[0] == pts[-1]:
-                    pts = pts[:-1]
-                usa_modo(DESENHAR, None, semente=(pts, cam.dados(cam.attr[i])))
-                win.barra.info.setText(f"{cam.titulo} selecionado — ajuste os vértices ou dê "
-                                       "Enter para cadastrar")
-            return
-        try:
-            curva = ts_todo.read_curve(row, col)
-        except Exception as e:
-            log.warning("curva indisponivel em (%d,%d): %s", row, col, e)
-            return
-        if not np.isfinite(curva).any():
-            log.info("pixel (%d,%d) sem dado em nenhum mes", row, col)
-            return
-        faixas, produtor = p_pontos.existente(row, col)
-        faz = cadastro.em(row, col)
-        # ⚠️ com o CAR ligado, o clique tambem SELECIONA o imovel sob o pixel: contorno destacado e
-        # cartao com os dados. Nao muda de modo nem adota -- so' mostra.
-        if camadas:
-            cam, i = sob_o_clique(row, col)
-            for c in camadas:
-                if c is not cam:
-                    c.limpa_selecao()
-            if cam is not None:
-                cam.seleciona(i)
-                win.barra.info.setText(f"{cam.titulo}: " + (resumo_car(cam.attr[i]) if cam is cam_car
-                                       else f"#{cam.attr[i].get('id')} · "
-                                            f"{float(cam.attr[i].get('area_ha') or 0):.1f} ha"))
-            else:
-                win.barra.info.setText(f"{len(p_pontos.store)} talhao(oes)")
-        if faz is not None and not produtor:
-            produtor = faz.get("proprietario") or faz.get("nome") or ""
-        p_ciclo.mostra(row, col, curva, cfg.meses, janela=cfg.meses_de(estado["safra"]),
-                       ja_gravado=faixas, produtor=produtor)
-
-    def ao_gravar(segmentos):
-        if p_ciclo.rc is None:
-            return
-        row, col = p_ciclo.rc
-        if not p_pontos.levantador:
-            QMessageBox.information(win, "Quem esta levantando?",
-                                    "Preencha o seu nome na barra de cima antes de gravar.")
-            return
-        faz = cadastro.em(row, col)
-        # ⚠️ grava a curva DA SAFRA (12 x 4), nao a serie inteira (54 x 4). O rotulo e' sobre
-        # esta safra; a serie toda custaria 4,5x o tamanho por ponto para nao dizer nada a mais.
-        idx = [cfg.meses.index(m) for m in cfg.meses_de(estado["safra"])]
-        pt, atualizou = p_pontos.registra(row, col, p_ciclo.curva[idx], segmentos,
-                                          p_ciclo.produtor, fazenda=faz)
-        log.info("%s talhao #%d: %s", "atualizado" if atualizou else "gravado",
-                 pt["id"], pt["class"])
-        cam_pontos.redesenha()
-        tabs.pontos.lista(p_pontos.store)
-        win.barra.info.setText(f"{len(p_pontos.store)} talhao(oes)")
-
-    # ---------------- CAR ----------------
-    def aviso_car():
-        """Diz na barra por que os perimetros nao aparecem, quando nao aparecem."""
-        # no modo Identificar a barra e' do talhao clicado; nos outros, da camada
-        if cam_car is None or estado["modo"] == IDENTIFICAR or not win.barra.bt_car.isChecked():
-            return
-        n = f"{cam_car.em_vista:,}".replace(",", ".")
-        if cam_car.escondida:
-            win.barra.info.setText(f"CAR: {n} imóveis — aproxime")
-        elif cam_car.em_vista == 0:
-            win.barra.info.setText("CAR: nenhum imóvel na vista")
-        else:
-            win.barra.info.setText(f"CAR: {n} imóveis" + (" · simplificado" if cam_car.simplificada
-                                                           else ""))
-
-    # ---------------- tabela ----------------
-    def centra(col, row, meia=600):
-        """Enquadra o mapa num ponto (col/row em pixel) com uma margem."""
-        view.vb.setRange(xRange=(col - meia, col + meia), yRange=(row - meia, row + meia),
-                         padding=0)
-
-    def vai_ao_ponto(row, col):
-        """Da linha da tabela ao mapa E a' curva: e' assim que se confere um rotulo."""
-        usa_modo(IDENTIFICAR)
-        centra(col, row)
-        ao_clicar(row, col)
-        win.raise_(); win.activateWindow()
-
-    def centra_fazenda(fid):
-        f = cadastro.por_id(fid)
-        poli = (f or {}).get("poligono") or []
-        if not poli:
-            return
-        xs = [q[0] for q in poli]; ys = [q[1] for q in poli]
-        meia = max(max(xs) - min(xs), max(ys) - min(ys)) * 0.7 + 50
-        centra((max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2, meia)
-        win.raise_(); win.activateWindow()
-
-    def exclui_ponto(row, col):
-        if p_pontos.store is None:
-            return
-        if QMessageBox.question(tabs, "Excluir", "Excluir este ponto rotulado?"
-                                ) != QMessageBox.StandardButton.Yes:
-            return
-        p_pontos.store.remove_at(row, col)
-        p_pontos.atualiza_info()
-        cam_pontos.redesenha()
-        tabs.pontos.lista(p_pontos.store)
-        win.barra.info.setText(f"{len(p_pontos.store)} talhao(oes)")
-
-    def exporta_camada(qual):
-        sug = str(cfg.pasta_pontos / (f"{qual}.gpkg" if qual == "fazendas"
-                                      else f"pontos_{estado['safra'].replace('/', '_')}.gpkg"))
-        dest, _ = QFileDialog.getSaveFileName(
-            tabs, f"Exportar {qual}", sug,
-            "GeoPackage (*.gpkg);;Shapefile (*.shp);;CSV (*.csv)")
-        if not dest:
-            return
-        try:
-            if dest.lower().endswith(".csv"):
-                if qual != "pontos":
-                    raise RuntimeError("CSV so' para os pontos; fazendas tem geometria")
-                p_pontos.exporta_para(dest)
-                n = sum(len(x.get("ciclos") or []) for x in p_pontos.store.points)
-            elif qual == "fazendas":
-                n, dest = exporta.fazendas(cadastro, dest)
-            else:
-                n, dest = exporta.pontos(p_pontos.store, dest)
-        except Exception as e:
-            QMessageBox.warning(tabs, "Exportar", str(e))
-            return
-        QMessageBox.information(tabs, "Exportar", f"{n} feição(ões) em\n{dest}")
-
-    def preenche(fid):
-        f = cadastro.por_id(fid)
-        if f is None:
-            return
-        dlg = DialogoFazenda(f, win)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            cadastro.salva(fid, None, dlg.dados())
-            cam_faz.redesenha()
-            tabs.fazendas.lista(cadastro, selecionar=fid)
-
-    def exclui(fid):
-        if fid is None:
-            return
-        f = cadastro.por_id(fid)
-        if QMessageBox.question(tabs, "Excluir",
-                                f"Excluir a fazenda '{(f or {}).get('nome') or fid}'?"
-                                ) != QMessageBox.StandardButton.Yes:
-            return
-        cadastro.remove(fid)
-        cam_faz.redesenha()
-        tabs.fazendas.lista(cadastro)
-
-    win.barra.safraMudou.connect(usa_safra)
-    win.barra.camadaMudou.connect(usa_camada)
-    win.barra.dataMudou.connect(usa_data)
-    win.barra.modoMudou.connect(usa_modo)
-    win.barra.abrirTabela.connect(lambda: tabs.mostra())
-    win.barra.exportar.connect(lambda: exporta_camada('pontos'))
-    win.confirmou.connect(confirma)
-    win.cancelou.connect(cancela)
-    win.desfezVertice.connect(desenho.desfaz_vertice)
-    view.pixelClicked.connect(ao_clicar)
-    p_ciclo.gravar.connect(ao_gravar)
-    tabs.fazendas.editarContorno.connect(lambda fid: fid and usa_modo(DESENHAR, fid))
-    tabs.fazendas.editarDados.connect(preenche)
-    tabs.fazendas.excluir.connect(exclui)
-    tabs.fazendas.irPara.connect(centra_fazenda)
-    tabs.fazendas.exportar.connect(lambda: exporta_camada('fazendas'))
-    tabs.pontos.irPara.connect(vai_ao_ponto)
-    tabs.pontos.excluir.connect(exclui_ponto)
-    tabs.pontos.exportar.connect(lambda: exporta_camada('pontos'))
-    view.vb.sigRangeChanged.connect(cam_pontos.redesenha)
-
-    win.barra.cb_safra.blockSignals(True)
-    win.barra.cb_safra.setCurrentText(safra)
-    win.barra.cb_safra.blockSignals(False)
-    usa_safra(safra)
-    usa_camada(CAMADAS_MES[0])
-    if cam_car is not None:
-        cam_car.visivel(win.barra.bt_car.isChecked())     # aparece desde a abertura
-    # rede de seguranca: se o processo for encerrado por outro caminho que nao o X da janela
-    # (sys.exit, excecao no event loop), as threads do mapa ainda sao paradas antes do teardown.
-    app.aboutToQuit.connect(win.para_threads)
-
     import types
-    return types.SimpleNamespace(
-        win=win, view=view, estado=estado, cadastro=cadastro, tabs=tabs,
-        p_ciclo=p_ciclo, p_pontos=p_pontos, cam_car=cam_car, cam_sam=cam_sam, camadas=camadas,
-        desenho=desenho, ao_clicar=ao_clicar, ao_gravar=ao_gravar, usa_modo=usa_modo,
-        usa_safra=usa_safra, usa_camada=usa_camada, usa_data=usa_data, confirma=confirma,
-        cancela=cancela, no_clique=no_clique, aviso_car=aviso_car)
+    ctx = types.SimpleNamespace(cfg=cfg, app=app)
+    # ⚠️ A ORDEM IMPORTA: cada peca usa o que as anteriores deixaram em `ctx` (ver montagem/__init__.py)
+    for peca in montagem.ORDEM:
+        peca.instala(ctx)
+    return ctx
 
 
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     ap = argparse.ArgumentParser(prog="cycle-navigator", description=__doc__.splitlines()[0])
     ap.add_argument("--config", help="caminho do .toml; se omitido, procura os lugares de sempre")
+    ap.add_argument("--autoteste", action="store_true",
+                    help="abre, recorta um talhao, monta a analise, fecha; o codigo de saida diz "
+                         "se o PACOTE esta' inteiro (e' assim que se confere um executavel novo)")
     args = ap.parse_args(argv)
     try:
         cfg = carrega(args.config)
@@ -603,9 +88,72 @@ def main(argv=None):
 
     app = QApplication(sys.argv[:1])
     estilo.aplica(app)
+    _tela_acordada()
     ctx = monta_app(cfg, app)
-    ctx.win.show()
+    ctx.win.showMaximized()
+    from PyQt6.QtCore import QTimer
+    QTimer.singleShot(2500, ctx.aviso_de_resposta)
+    QTimer.singleShot(250, ctx.enquadra_largura)      # so' depois de a janela ter o tamanho final
+    if args.autoteste:
+        from PyQt6.QtCore import QTimer
+        QTimer.singleShot(1500, lambda: app.exit(_autoteste(ctx)))
     return app.exec()
+
+
+def _tela_acordada():
+    """⚠️ No Mac a tela apaga em 2 minutos na bateria -- no meio da conversa com o produtor. Enquanto
+    o programa estiver aberto o `caffeinate` do proprio macOS segura a tela (e o sono); ele sai
+    sozinho quando este processo termina (-w). Fora do Mac, ou sem o comando: nada acontece."""
+    if sys.platform != "darwin":
+        return
+    try:
+        import os
+        import subprocess
+        subprocess.Popen(["/usr/bin/caffeinate", "-d", "-i", "-w", str(os.getpid())],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        log.info("tela acordada indisponivel (%s)", e)
+
+
+def _autoteste(ctx):
+    """⚠️ O que so' quebra DEPOIS de empacotar: pyproj (CRS), o modelo do recorte (hydra le^ .yaml de
+    dentro do pacote), os icones. Nada e' gravado: so' leitura. 0 = inteiro; 1 = algo faltou."""
+    falhas = []
+    try:
+        import pyproj
+        log.info("autoteste: pyproj %s", pyproj.__version__)
+    except Exception as e:
+        falhas.append(f"pyproj: {e}")
+    try:
+        if ctx.cam_sam is not None:
+            p = ctx.cam_sam.polys[ctx.cam_sam.n // 2].representative_point()
+            row, col = int(p.y), int(p.x)
+        else:
+            row, col = ctx.view.height() // 2, ctx.view.width() // 2
+        ctx.ao_clicar(row, col)
+        log.info("autoteste: clique abriu %s", ctx.p_ciclo.rc)
+        if ctx.recorte.ok:
+            rec = ctx.pede_recorte([(row, col, 1)])
+            if rec is None:
+                falhas.append("recorte: o modelo nao devolveu contorno")
+            else:
+                log.info("autoteste: recorte de %d vertices, nota %.2f",
+                         len(rec["poli"].exterior.coords), rec["nota"])
+        else:
+            log.info("autoteste: recorte desligado (%s)", ctx.recorte.motivo)
+        ctx.abre_analise()
+        log.info("autoteste: analise com %d talhao(oes)", len(ctx.analise._pts))
+        ctx.abre_sugestoes()                     # so' abre a janela: nada e' enviado
+        ctx.j_sug.close()
+        log.info("autoteste: sugestoes com %d na fila", len(ctx.caixa.lista()))
+    except Exception as e:
+        log.exception("autoteste")
+        falhas.append(f"{type(e).__name__}: {e}")
+    for f in falhas:
+        log.error("autoteste FALHOU: %s", f)
+    log.info("autoteste: %s", "FALHOU" if falhas else "inteiro")
+    ctx.win.close()
+    return 1 if falhas else 0
 
 
 if __name__ == "__main__":

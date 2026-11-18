@@ -8,7 +8,8 @@ from cycle_navigator.config import carrega
 from cycle_navigator.app import monta_app, CAMADAS_MES, CAMADAS_ANO
 
 def etapa(t): print("  ->", t, flush=True)
-cfg = carrega(r"D:\NAVIGATOR\cycle-navigator.toml")
+# o .toml vem de CN_CONFIG (test_fluxo_real.py o passa); o caminho do PC do LSIE fica so como padrao
+cfg = carrega(os.environ.get("CN_CONFIG", r"D:\NAVIGATOR\cycle-navigator.toml"))
 etapa("monta_app"); ctx = monta_app(cfg, app); ctx.win.resize(1600, 980); ctx.win.show(); app.processEvents()
 b = ctx.win.barra
 i = ctx.cam_sam.n // 2; rp = ctx.cam_sam.polys[i].representative_point(); cx, cy = rp.x, rp.y

@@ -69,7 +69,10 @@ def fazendas(cadastro, caminho):
     return len(gdf), out
 
 
-def pontos(store, caminho):
+def pontos(store, caminho, poligono_de=None):
+    """`poligono_de(ponto)` -> poligono (shapely, no CRS do store) do talhao que deu a curva, ou None.
+    Com ele sai tambem a camada `talhoes`: UM POLIGONO POR TALHAO levantado, com o sistema inteiro
+    ("Soja > Milho safrinha") -- e' o que se pinta no mapa; os pontos continuam um por faixa."""
     gpd, Point, _Polygon = _gpd()
     linhas, geoms = [], []
     for p in store.points:
@@ -86,10 +89,43 @@ def pontos(store, caminho):
                            "produtor": p.get("produtor", ""), "contato": p.get("contato", ""),
                            "levantador": p.get("levantador", ""),
                            "gravado_em": p.get("gravado_em", ""),
+                           "fonte": p.get("fonte_curva", ""), "talhao_ha": p.get("talhao_ha"),
                            "row": p["row"], "col": p["col"]})
     if not linhas:
         raise RuntimeError("nenhum ponto rotulado para exportar")
     gdf = gpd.GeoDataFrame(linhas, geometry=geoms, crs=store.crs)
     out = _grava(gdf, caminho, "pontos")
     log.info("exportadas %d faixa(s) de %d ponto(s) -> %s", len(gdf), len(store.points), out)
+    if poligono_de is not None:
+        try:
+            _talhoes(gpd, store, out, poligono_de)
+        except Exception as e:                 # os pontos ja' sairam: o poligono e' um a mais
+            log.warning("camada de talhoes nao exportada: %s", e)
     return len(gdf), out
+
+
+def _talhoes(gpd, store, out, poligono_de):
+    linhas, geoms = [], []
+    for p in store.points:
+        poli = poligono_de(p)
+        if poli is None or poli.is_empty:
+            continue
+        cic = p.get("ciclos") or []
+        geoms.append(poli)
+        linhas.append({"id": p["id"],
+                       "sistema": " > ".join((s.get("cultura") or "?") for s in cic)
+                                  or p.get("class", ""),
+                       "n_faixas": len(cic), "area_ha": round(poli.area / 1e4, 2),
+                       "fonte": p.get("fonte_curva", ""), "safra": p.get("period", ""),
+                       "fazenda": p.get("fazenda", ""), "produtor": p.get("produtor", ""),
+                       "levantador": p.get("levantador", ""),
+                       "gravado_em": p.get("gravado_em", "")})
+    if not linhas:
+        return 0
+    gdf = gpd.GeoDataFrame(linhas, geometry=geoms, crs=store.crs)
+    if out.lower().endswith(".shp"):           # shapefile: um arquivo por tipo de geometria
+        _grava(gdf, out[:-4] + "_talhoes.shp", "talhoes")
+    else:
+        gdf.to_file(out, layer="talhoes", driver="GPKG")       # segunda camada do mesmo arquivo
+    log.info("exportados %d talhao(oes) como poligono", len(gdf))
+    return len(gdf)

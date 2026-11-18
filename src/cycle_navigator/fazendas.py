@@ -54,6 +54,7 @@ class CadastroFazendas:
         self.crs = str(crs) if crs else None
         self.fazendas = []
         self._paths = {}
+        self.danificado = None
         self.carrega()
 
     def carrega(self):
@@ -62,9 +63,12 @@ class CadastroFazendas:
         try:
             with open(self.caminho, encoding="utf-8") as f:
                 self.fazendas = json.load(f).get("fazendas", [])
-        except (OSError, ValueError) as e:
-            log.warning("cadastro de fazendas ilegivel (%s): %s", self.caminho, e)
+        except (OSError, ValueError, AttributeError) as e:
+            # ⚠️⚠️ ilegivel NAO e' vazio: o proximo `grava()` sobrescreveria o cadastro inteiro.
+            log.error("cadastro de fazendas ilegivel (%s): %s", self.caminho, e)
             self.fazendas = []
+            from .arquivos import poe_de_lado
+            self.danificado = poe_de_lado(self.caminho)
         self._reindexa()
 
     def grava(self):

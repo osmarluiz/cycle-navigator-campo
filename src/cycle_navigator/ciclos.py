@@ -9,11 +9,21 @@ diferentes para a mesma resposta. Toda borda cai no mes inteiro mais proximo.
 pheno_engine porque ninguem desenha duas bordas por talhao com o produtor esperando, e porque assim
 a resposta do agricultor e' uma resposta SOBRE A LEITURA DO MOTOR. A CULTURA vem vazia porque campo
 pre-preenchido e' aceito sem ler: deixar "Soja" produziria talhoes de soja que ninguem afirmou.
+Os botoes de cultura de um clique NAO mudam isso: nada fica escolhido ate' alguem clicar.
 
-⚠️ O PAINEL FOI ENXUGADO DE PROPOSITO. A versao anterior tinha cinco fileiras de controle embaixo do
-grafico e ninguem achava o que importava. O ponto de operacao do motor (piso/subida) saiu para um
-menu: e' ajuste de especialista, usado uma vez por sessao, e estava competindo por atencao com o
-campo onde se digita a cultura, que e' usado a cada talhao.
+⚠️ TODAS AS FAIXAS APARECEM, UMA EM FOCO. A versao anterior pintava so' a faixa em foco; as outras
+ficavam a 10% de cinza, e quem olhava a curva via um ciclo onde o motor tinha achado dois. Agora cada
+faixa tem a cor da sua cultura (cinza enquanto nao tem nome) e um rotulo em cima; a em foco e' a
+unica com borda grossa e a unica que se arrasta.
+
+⚠️ O MES DO MAPA APARECE NA CURVA, E A CURVA LEVA O MAPA. Uma linha tracejada marca o mes que o mapa
+esta' mostrando; clicar num mes da curva leva o mapa ate' ele. "Como estava esse talhao em
+janeiro?" e' a pergunta mais comum na conversa com o produtor, e antes exigia achar janeiro num
+combo la' em cima.
+
+⚠️ O PAINEL FOI ENXUGADO DE PROPOSITO. O ponto de operacao do motor (piso/subida) mora num menu: e'
+ajuste de especialista, usado uma vez por sessao, e nao pode disputar atencao com a cultura, que se
+escolhe a cada talhao.
 """
 import logging
 
@@ -22,8 +32,9 @@ import pheno_engine
 import pyqtgraph as pg
 import qtawesome as qta
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
-from PyQt6.QtWidgets import (QComboBox, QCompleter, QHBoxLayout, QLabel, QLineEdit, QMenu,
-                             QPushButton, QSlider, QToolButton, QVBoxLayout, QWidget,
+from PyQt6.QtGui import QColor, QFont, QIcon
+from PyQt6.QtWidgets import (QButtonGroup, QComboBox, QCompleter, QHBoxLayout, QLabel, QLineEdit,
+                             QMenu, QPushButton, QSlider, QToolButton, QVBoxLayout, QWidget,
                              QWidgetAction)
 
 from . import estilo
@@ -37,9 +48,16 @@ MES_CURTO = {1: "jan", 2: "fev", 3: "mar", 4: "abr", 5: "mai", 6: "jun",
 # duvida da segunda. Uma confianca unica obrigaria a rebaixar a resposta inteira por causa da parte
 # fraca, ou inflar a parte fraca por causa da forte -- as duas saidas sao mentira.
 CONFIANCA = ["certo", "acho que", "nao sei"]
-ALFA = {"certo": 85, "acho que": 45, "nao sei": 22}
+CONF_ROTULO = {"certo": "Certo", "acho que": "Acho que", "nao sei": "Não sei"}
+ALFA = {"certo": 110, "acho que": 70, "nao sei": 40}
 COR_FOCO = estilo.FOCO
 COR_FUNDO = estilo.TEXT_3
+COR_CURVA = estilo.ACCENT
+
+# as culturas que ganham botao de um clique, nesta ordem, quando ninguem gravou nada ainda; depois
+# a ordem passa a ser a das mais gravadas
+RAPIDAS = ["Soja", "Milho safrinha", "Milho", "Feijao", "Sorgo", "Algodao", "Pastagem"]
+N_RAPIDAS = 7
 
 
 def ndvi_da_curva(curva):
@@ -94,6 +112,48 @@ def deteccao(nd, meses, piso=0.08, subida=0.0):
     return out
 
 
+def _rot(txt):
+    l = QLabel(txt)
+    l.setObjectName("rotulo")
+    return l
+
+
+class Segmentado(QWidget):
+    """Botoes encostados, um marcado: [Safra | 2 anos | Tudo]."""
+
+    escolheu = pyqtSignal(object)
+
+    def __init__(self, opcoes, parent=None):
+        super().__init__(parent)
+        self.setObjectName("seg")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(2, 2, 2, 2)
+        lay.setSpacing(2)
+        self.grupo = QButtonGroup(self)
+        self.grupo.setExclusive(True)
+        self.bts = {}
+        for valor, txt, dica in opcoes:
+            b = QPushButton(txt)
+            b.setCheckable(True)
+            b.setToolTip(dica)
+            b.clicked.connect(lambda _, v=valor: self.escolheu.emit(v))
+            self.grupo.addButton(b)
+            self.bts[valor] = b
+            lay.addWidget(b)
+
+    def marca(self, valor):
+        b = self.bts.get(valor)
+        if b is not None:
+            b.setChecked(True)
+
+    def valor(self):
+        for v, b in self.bts.items():
+            if b.isChecked():
+                return v
+        return None
+
+
 class Chip(QWidget):
     """Uma faixa na fila: clica para focar, ✕ para apagar.
 
@@ -123,19 +183,27 @@ class Chip(QWidget):
         lay.addWidget(self.bt)
         lay.addWidget(self.x)
 
-    def texto(self, t, aceso):
+    def texto(self, t, aceso, cor=None):
         self.bt.setText(t)
         self.bt.setChecked(aceso)
+        self.bt.setIcon(qta.icon("mdi6.circle", color=cor) if cor else QIcon())
+        self.bt.setIconSize(QSize(10, 10))
 
 
 class PainelCiclo(QWidget):
-    """A curva do pixel clicado e as faixas que o produtor for contando."""
+    """A curva do talhao clicado e as faixas que o produtor for contando."""
 
     gravar = pyqtSignal(list)
+    mesEscolhido = pyqtSignal(int)      # AAAAMM clicado na curva -> o mapa vai ate' ele
+    fonteMudou = pyqtSignal(str)        # "talhao" | "pixel"
+    recado = pyqtSignal(str, str)       # (texto, tipo) para o aviso sobre o mapa
+    abriu = pyqtSignal()
 
-    def __init__(self, culturas_conhecidas=None, parent=None):
+    def __init__(self, culturas_conhecidas=None, parent=None, cores=None, mais_usadas=None):
         super().__init__(parent)
         self._conhecidas = culturas_conhecidas or (lambda: [])
+        self._mais_usadas = mais_usadas or (lambda: [])
+        self.cores = {k.lower(): v for k, v in (cores or {}).items()}
         self.meses = []
         self.rc = None
         self.curva = None
@@ -146,119 +214,170 @@ class PainelCiclo(QWidget):
         self._sug = []
         self._tocado = False
         self._ajustando = False       # trava anti-recursao do grude no mes
+        self._mes_mapa = None
 
         lay = QVBoxLayout(self)
         self.setObjectName("rodape")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         lay.setContentsMargins(16, 10, 16, 12)
         lay.setSpacing(8)
 
-        self.titulo = QLabel("")
-        self.titulo.setObjectName("h2")
-        lay.addWidget(self.titulo)
-
-        # ⚠️ ESTADO VAZIO. Sem pixel aberto, dois graficos em branco com eixo 0..1 nao dizem nada e
-        # ainda parecem defeito. Enquanto nao ha' o que mostrar, mostra-se a instrucao.
-        self.vazio = QLabel("Clique num talhão no mapa para ver o ciclo do ano")
-        self.vazio.setObjectName("vazio")
-        self.vazio.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # ---------------- vazio: os tres passos ----------------
+        # ⚠️ ESTADO VAZIO. Sem talhao aberto, dois graficos em branco nao dizem nada e parecem
+        # defeito -- e ocupavam metade da tela. Agora o painel encolhe e mostra o caminho inteiro.
+        self.vazio = QWidget()
+        vz = QHBoxLayout(self.vazio)
+        vz.setContentsMargins(4, 6, 4, 6)
+        vz.setSpacing(10)
+        vz.addStretch(1)
+        for i, txt in enumerate(("Clique num talhão no mapa",
+                                 "Diga o que foi plantado em cada faixa do ano",
+                                 "Gravar"), 1):
+            n = QLabel(str(i)); n.setObjectName("num")
+            t = QLabel(txt); t.setObjectName("passo")
+            vz.addWidget(n); vz.addWidget(t)
+            if i < 3:
+                seta = QLabel()
+                seta.setPixmap(qta.icon("mdi6.arrow-right", color=estilo.TEXT_3).pixmap(18, 18))
+                vz.addSpacing(6); vz.addWidget(seta); vz.addSpacing(6)
+        vz.addStretch(1)
         lay.addWidget(self.vazio, 1)
 
+        # ---------------- cabecalho ----------------
+        cab = self._cab = QHBoxLayout()
+        cab.setSpacing(10)
+        txts = QVBoxLayout(); txts.setSpacing(0)
+        self.titulo = QLabel("")
+        self.titulo.setObjectName("h2")
+        self.subtitulo = QLabel("")
+        self.subtitulo.setObjectName("subtitulo")
+        # ⚠️ RichText explicito: o Qt adivinha o formato pelo comeco do texto, e um subtitulo que
+        # comeca por palavra comum era tratado como texto puro -- os "&nbsp;" apareciam na tela.
+        self.titulo.setTextFormat(Qt.TextFormat.RichText)
+        self.subtitulo.setTextFormat(Qt.TextFormat.RichText)
+        txts.addWidget(self.titulo); txts.addWidget(self.subtitulo)
+        cab.addLayout(txts, 1)
+        self.seg_fonte = Segmentado([
+            ("talhao", "Talhão", "a curva é a MÉDIA do talhão recortado automaticamente: menos "
+                                 "ruído, e é o talhão inteiro que o produtor descreve"),
+            ("recorte", "Recortar", "o programa recorta o talhão na hora, a partir do seu clique. "
+                                    "⇧ clique = isto também · ⌥ clique = isto não"),
+            ("pixel", "Ponto", "a curva é só o pixel clicado (4,8 m)")])
+        self.seg_fonte.escolheu.connect(lambda v: self.fonteMudou.emit(str(v)))
+        cab.addWidget(self.seg_fonte)
+        self.seg_janela = Segmentado([(12, "Safra", "os 12 meses da safra (out → set)"),
+                                      (24, "2 anos", "24 meses"),
+                                      (0, "Tudo", "a série inteira")])
+        self.seg_janela.escolheu.connect(self.define_janela)
+        self.seg_janela.marca(12)
+        cab.addWidget(self.seg_janela)
+        # ⚠️ piso/subida saem para um menu: ajuste de especialista nao pode disputar espaco com o
+        # campo que se usa a cada talhao.
+        self.bt_ajustes = QToolButton()
+        self.bt_ajustes.setObjectName("ghost")
+        self.bt_ajustes.setFixedSize(32, 32)
+        self.bt_ajustes.setToolTip("ajustar a detecção de ciclos (especialista)")
+        self.bt_ajustes.setIcon(qta.icon("mdi6.tune-variant", color=estilo.TEXT_2))
+        self.bt_ajustes.setIconSize(QSize(18, 18))
+        self.bt_ajustes.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.bt_ajustes.setMenu(self._menu_ajustes())
+        cab.addWidget(self.bt_ajustes)
+        lay.addLayout(cab)
+
+        # ---------------- graficos ----------------
         self.plot = pg.PlotWidget()
-        self.plot.setMinimumHeight(170)
-        self.plot.setBackground(estilo.BG)
+        self.plot.setMinimumHeight(150)
+        self.plot.setBackground(estilo.PANEL)
         # o botao "A" de auto-range aparece sozinho quando o auto-range e' desligado; aqui o zoom e'
         # da janela de meses, nao do usuario, entao o botao so' confunde
         self.plot.getPlotItem().hideButtons()
-        self.plot.setLabel("left", "NDVI")
-        self.plot.showGrid(x=True, y=True, alpha=0.2)
+        self.plot.setLabel("left", "vigor (NDVI)", color=estilo.TEXT_3)
+        self.plot.showGrid(x=False, y=True, alpha=0.12)
         self.plot.setMouseEnabled(x=False, y=False)
-        self.plot.setYRange(0, 1)
+        self.plot.setYRange(0, 1.05)
         self.plot.getPlotItem().setMenuEnabled(False)
+        for ax in ("left", "bottom"):
+            a = self.plot.getAxis(ax)
+            a.setPen(pg.mkPen(estilo.BORDER_STRONG))
+            a.setTextPen(pg.mkPen(estilo.TEXT_2))
+        self.plot.setCursor(Qt.CursorShape.PointingHandCursor)
         lay.addWidget(self.plot, 1)
 
         self.geral = pg.PlotWidget()
-        self.geral.setFixedHeight(44)
-        self.geral.setBackground(estilo.BG)
+        self.geral.setFixedHeight(40)
+        self.geral.setBackground(estilo.PANEL)
         self.geral.getPlotItem().hideButtons()
         self.geral.setMouseEnabled(x=False, y=False)
         self.geral.hideAxis("left")
+        self.geral.getAxis("bottom").setPen(pg.mkPen(estilo.BORDER))
+        self.geral.getAxis("bottom").setTextPen(pg.mkPen(estilo.TEXT_3))
         self.geral.getPlotItem().setMenuEnabled(False)
         self.geral.setYRange(0, 1)
-        self.janela = pg.LinearRegionItem(brush=pg.mkBrush(0, 229, 255, 40),
-                                          pen=pg.mkPen(COR_FOCO, width=2),
-                                          hoverBrush=pg.mkBrush(0, 229, 255, 70))
+        self.geral.setToolTip("a série inteira: arraste a janela para ver outros anos")
+        self.janela = pg.LinearRegionItem(brush=pg.mkBrush(143, 196, 82, 38),
+                                          pen=pg.mkPen(COR_CURVA, width=2),
+                                          hoverBrush=pg.mkBrush(143, 196, 82, 70))
         self.janela.setZValue(10)
         self.geral.addItem(self.janela)
         self.janela.sigRegionChanged.connect(self._janela_mudou)
         lay.addWidget(self.geral)
 
-        # ---------------- fileira 1: janela, faixas, acoes ----------------
+        # ---------------- fileira 1: as faixas, quem respondeu, gravar ----------------
         f1 = self._f1 = QHBoxLayout()
         f1.setSpacing(6)
-        for txt, n in (("12 meses", 12), ("24", 24), ("tudo", 0)):
-            b = QPushButton(txt); b.setObjectName("ghost")
-            b.clicked.connect(lambda _, n=n: self.define_janela(n))
-            f1.addWidget(b)
-        f1.addSpacing(14)
         f1.addWidget(_rot("Faixas"))
         self.fila = QHBoxLayout()
         self.fila.setSpacing(6)
         f1.addLayout(self.fila)
         self.bt_add = QPushButton("faixa"); self.bt_add.setObjectName("ghost")
         self.bt_add.setIcon(qta.icon("mdi6.plus", color=estilo.TEXT)); self.bt_add.setIconSize(QSize(16, 16))
+        self.bt_add.setToolTip("faixa nova (ou arraste na curva, num trecho vazio)")
         f1.addWidget(self.bt_add)
         f1.addStretch(1)
-        self.lb_leitura = QLabel("")
-        self.lb_leitura.setObjectName("contador")
-        f1.addWidget(self.lb_leitura)
-        # ⚠️ piso/subida saem para um menu: ajuste de especialista nao pode disputar espaco com o
-        # campo que se usa a cada talhao.
-        self.bt_ajustes = QToolButton()
-        self.bt_ajustes.setObjectName("ghost")
-        self.bt_ajustes.setText("detecção")
-        self.bt_ajustes.setIcon(qta.icon("mdi6.tune-variant", color=estilo.TEXT_2))
-        self.bt_ajustes.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.bt_ajustes.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self.bt_ajustes.setMenu(self._menu_ajustes())
-        f1.addWidget(self.bt_ajustes)
+        f1.addWidget(_rot("Produtor"))
+        self.ed_produtor = QLineEdit()
+        self.ed_produtor.setPlaceholderText("quem respondeu")
+        self.ed_produtor.setFixedWidth(190)
+        f1.addWidget(self.ed_produtor)
+        self.bt_gravar = QPushButton("Gravar")
+        self.bt_gravar.setObjectName("cta")
+        self.bt_gravar.setIcon(qta.icon("mdi6.check-bold", color=estilo.ON_ACCENT))
+        self.bt_gravar.setIconSize(QSize(18, 18))
+        self.bt_gravar.setMinimumWidth(124)
+        self.bt_gravar.setToolTip("gravar o talhão (⌘S)")
+        self.bt_gravar.setDefault(True)
+        f1.addWidget(self.bt_gravar)
         lay.addLayout(f1)
 
         # ---------------- fileira 2: a faixa em foco ----------------
         f2 = self._f2 = QHBoxLayout()
-        f2.setSpacing(10)
+        f2.setSpacing(6)
         self.lb_faixa = QLabel("—")
-        self.lb_faixa.setMinimumWidth(230)
+        self.lb_faixa.setMinimumWidth(170)
         f2.addWidget(self.lb_faixa)
+        self.rapidas = QHBoxLayout()
+        self.rapidas.setSpacing(6)
+        f2.addLayout(self.rapidas)
         # ⚠️ combo EDITAVEL com autocompletar: lista fechada nao cobre o que o campo traz
         # ("sorgo forrageiro", "consorcio"); texto cru puro produz "soja"/"Soja"/"SOJA" como tres
         # culturas na hora de somar.
         self.ed_cultura = QComboBox()
         self.ed_cultura.setEditable(True)
-        self.ed_cultura.setMinimumWidth(260)
+        self.ed_cultura.setMinimumWidth(170)
         self.ed_cultura.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        self.ed_cultura.lineEdit().setPlaceholderText("o que foi plantado nesta faixa?")
-        f2.addWidget(self.ed_cultura)
-        self.cb_conf = QComboBox(); self.cb_conf.addItems(CONFIANCA); self.cb_conf.setFixedWidth(110)
-        f2.addWidget(self.cb_conf)
-        f2.addStretch(1)
-        f2.addWidget(_rot("Produtor"))
-        self.ed_produtor = QLineEdit()
-        self.ed_produtor.setPlaceholderText("quem respondeu")
-        self.ed_produtor.setFixedWidth(200)
-        f2.addWidget(self.ed_produtor)
-        self.bt_gravar = QPushButton("Gravar")
-        self.bt_gravar.setObjectName("cta")
-        self.bt_gravar.setIcon(qta.icon("mdi6.content-save", color=estilo.ON_ACCENT))
-        self.bt_gravar.setIconSize(QSize(18, 18))
-        self.bt_gravar.setMinimumWidth(130)
-        self.bt_gravar.setDefault(True)
-        f2.addWidget(self.bt_gravar)
+        self.ed_cultura.lineEdit().setPlaceholderText("outra cultura…")
+        f2.addWidget(self.ed_cultura, 1)
+        f2.addSpacing(6)
+        self.seg_conf = Segmentado([(c, CONF_ROTULO[c], "o quanto o produtor tem certeza desta "
+                                                        "faixa") for c in CONFIANCA])
+        self.seg_conf.marca(CONFIANCA[0])
+        f2.addWidget(self.seg_conf)
         lay.addLayout(f2)
 
         self.bt_add.clicked.connect(self._add_manual)
         self.bt_gravar.clicked.connect(self._emite)
         self.ed_cultura.currentTextChanged.connect(self._foco_editado)
-        self.cb_conf.currentTextChanged.connect(self._foco_editado)
+        self.seg_conf.escolheu.connect(lambda _v: self._foco_editado())
 
         # ⚠️ A FAIXA SE SELECIONA CLICANDO NELA, E SE CRIA ARRASTANDO NA CURVA. Antes so' dava pelo
         # chip, e o chip fica longe do desenho: a pessoa olha para a curva, aponta para a corcova
@@ -276,8 +395,9 @@ class PainelCiclo(QWidget):
         m = QMenu(self)
         w = QWidget()
         g = QVBoxLayout(w)
-        g.addWidget(QLabel("<b>Ponto de operação do motor</b>"))
-        g.addWidget(QLabel("<span style='color:#999'>o que conta como um ciclo</span>"))
+        g.addWidget(QLabel("<b>Detecção de ciclos</b>"))
+        g.addWidget(QLabel(f"<span style='color:{estilo.TEXT_2}'>o que o motor conta como um "
+                           "ciclo</span>"))
         l1 = QHBoxLayout(); l1.addWidget(QLabel("piso de amplitude"))
         self.sl_piso = QSlider(Qt.Orientation.Horizontal)
         self.sl_piso.setRange(2, 40); self.sl_piso.setValue(8); self.sl_piso.setFixedWidth(150)
@@ -298,13 +418,14 @@ class PainelCiclo(QWidget):
 
     # ================= estado =================
     def _habilita(self, on):
-        for w in (self.bt_add, self.bt_gravar, self.bt_ajustes, self.ed_cultura, self.cb_conf):
+        for w in (self.bt_add, self.bt_gravar, self.bt_ajustes, self.ed_cultura):
             w.setEnabled(on)
         # o que nao tem o que mostrar fica fora da tela, nao vazio nela
         self.vazio.setVisible(not on)
-        for w in (self.plot, self.geral, self.titulo, self.lb_faixa, self.lb_leitura):
+        for w in (self.plot, self.geral, self.titulo, self.subtitulo, self.lb_faixa,
+                  self.seg_fonte, self.seg_janela, self.bt_ajustes, self.seg_conf):
             w.setVisible(on)
-        for fila in (self._f1, self._f2):
+        for fila in (self._f1, self._f2, self.rapidas):
             for i in range(fila.count()):
                 w = fila.itemAt(i).widget()
                 if w is not None:
@@ -322,8 +443,18 @@ class PainelCiclo(QWidget):
     def produtor(self):
         return self.ed_produtor.text().strip()
 
-    # ================= abrir um pixel =================
-    def mostra(self, row, col, curva, meses, janela=None, ja_gravado=None, produtor=None):
+    def cor_de(self, cultura):
+        return self.cores.get((cultura or "").strip().lower())
+
+    def define_fonte(self, disponivel, atual, recorte=False):
+        """Talhao/Ponto: 'Talhao' so' existe quando o clique caiu dentro de um talhao do SAM."""
+        self.seg_fonte.bts["talhao"].setEnabled(disponivel)
+        self.seg_fonte.bts["recorte"].setVisible(recorte)
+        self.seg_fonte.marca(atual)
+
+    # ================= abrir um talhao =================
+    def mostra(self, row, col, curva, meses, janela=None, ja_gravado=None, produtor=None,
+               titulo=None, subtitulo=""):
         """`curva` e `meses` sao a SERIE INTEIRA; `janela` sao os meses a mostrar ampliados."""
         if produtor:
             self.ed_produtor.setText(produtor)
@@ -332,12 +463,18 @@ class PainelCiclo(QWidget):
         self.meses = list(meses)
         self.nd = ndvi_da_curva(self.curva)
         self._tocado = bool(ja_gravado)
+        self._titulo = titulo or f"Ponto {row}, {col}"
+        self._subtitulo = subtitulo
 
         self._limpa()
         x = np.arange(len(self.nd))
-        self.plot.plot(x, self.nd, pen=pg.mkPen("#e8e8e8", width=2),
-                       symbol="o", symbolSize=5, symbolBrush="#e8e8e8")
-        self.geral.plot(x, self.nd, pen=pg.mkPen("#9a9a9a", width=1))
+        # a curva: linha na cor de acao, com um veu por baixo -- e' o que o olho segue
+        veu = QColor(estilo.ACCENT); veu.setAlpha(28)
+        self.plot.plot(x, self.nd, pen=pg.mkPen(COR_CURVA, width=2.5),
+                       fillLevel=0, brush=pg.mkBrush(veu),
+                       symbol="o", symbolSize=6, symbolBrush=COR_CURVA,
+                       symbolPen=pg.mkPen(estilo.PANEL, width=1.5))
+        self.geral.plot(x, self.nd, pen=pg.mkPen(estilo.TEXT_3, width=1))
         self.geral.getAxis("bottom").setTicks([self._ticks_geral()])
         # ⚠️ sem isto o pyqtgraph re-enquadra a cada item novo (cada faixa) e desfaz o zoom:
         # o usuario escolhe 12 meses e o grafico volta sozinho para os 54.
@@ -345,12 +482,24 @@ class PainelCiclo(QWidget):
         self.geral.setXRange(-0.5, len(x) - 0.5, padding=0)
         self.janela.setBounds([0, len(x) - 1])
 
+        self._cursor = pg.InfiniteLine(angle=90, movable=False,
+                                       pen=pg.mkPen(estilo.TEXT, width=1.5,
+                                                    style=Qt.PenStyle.DashLine),
+                                       label="no mapa", labelOpts={
+                                           "position": 0.92, "color": estilo.TEXT_2,
+                                           "fill": pg.mkBrush(estilo.PANEL)})
+        self._cursor.setZValue(5)
+        self.plot.addItem(self._cursor)
+        self.marca_mes(self._mes_mapa)
+
         alvo = [self.meses.index(m) for m in (janela or []) if m in self.meses]
         if alvo:
             self.janela.setRegion((min(alvo), max(alvo)))
+            self.seg_janela.marca(12)
         else:
             self.define_janela(12)
         self._habilita(True)
+        self._atualiza_rapidas()
         self._atualiza_sugestao()
         if ja_gravado:
             for s in ja_gravado:
@@ -361,6 +510,19 @@ class PainelCiclo(QWidget):
         else:
             self._sugere()
         self._janela_mudou()
+        self.abriu.emit()
+
+    def marca_mes(self, m):
+        """A linha 'no mapa' vai para o mes m (AAAAMM)."""
+        self._mes_mapa = m
+        cur = getattr(self, "_cursor", None)
+        if cur is None:
+            return
+        if m in self.meses:
+            cur.setPos(self.meses.index(m))
+            cur.show()
+        else:
+            cur.hide()
 
     def _ticks(self, i0, i1):
         """⚠️ Rotulos raleados conforme a janela: 54 rotulos no mesmo eixo viram um borrao."""
@@ -374,18 +536,21 @@ class PainelCiclo(QWidget):
     def _limpa(self):
         for f in self._faixas:
             self.plot.removeItem(f["reg"])
+            self.plot.removeItem(f["txt"])
         self._faixas = []
         self._foco = -1
         self._picos = []
         self.plot.clear()
         self.geral.clear()
         self.geral.addItem(self.janela)
+        self._cursor = None
         self._refaz_chips()
 
     # ================= janela de meses =================
     def define_janela(self, n):
         if not self.meses:
             return
+        self.seg_janela.marca(n)
         total = len(self.meses)
         if n <= 0 or n >= total:
             self.janela.setRegion((0, total - 1))
@@ -406,10 +571,32 @@ class PainelCiclo(QWidget):
             self._ajustando = False
         self.plot.setXRange(i0 - 0.45, i1 + 0.45, padding=0)
         self.plot.getAxis("bottom").setTicks([self._ticks(i0, i1)])
+        self._escreve_titulo()
+        self._pinta()
+
+    def _escreve_titulo(self, erro=None):
+        if not self.meses:
+            return
+        a, b = self.janela.getRegion()
+        i0, i1 = int(round(a)), int(round(b))
         self.titulo.setText(
-            f"<b>Pixel {self.rc}</b> &nbsp;·&nbsp; {rotulo_mes(self.meses[i0])} → "
-            f"{rotulo_mes(self.meses[i1])} &nbsp;<span style='color:#888'>"
-            f"({i1 - i0 + 1} meses · arraste as bordas coloridas para ajustar cada faixa)</span>")
+            f"{self._titulo} &nbsp;<span style='color:{estilo.TEXT_2};font-weight:400'>· "
+            f"{rotulo_mes(self.meses[i0])} → {rotulo_mes(self.meses[i1])}</span>")
+        sub = [s for s in (self._subtitulo, self._leitura()) if s]
+        if erro:
+            sub = [f"<span style='color:#e8a33d'>{erro}</span>"]
+        self.subtitulo.setText(" &nbsp;·&nbsp; ".join(sub))
+
+    def _leitura(self):
+        """Quantos ciclos o motor leu na janela, em palavras."""
+        a, b = self.janela.getRegion()
+        navista = sorted({n for i, f, _p, n in self._sug if not (f < a - 0.5 or i > b + 0.5)})
+        if not navista:
+            return "nenhum ciclo detectado"
+        if len(navista) == 1:
+            n = navista[0]
+            return f"{n:.0f} ciclo detectado" if n == 1 else f"{n:.0f} ciclos detectados"
+        return "ciclos detectados por ano: " + " · ".join(f"{n:.0f}" for n in navista)
 
     # ================= deteccao =================
     def _atualiza_sugestao(self):
@@ -421,13 +608,10 @@ class PainelCiclo(QWidget):
         self._sug = deteccao(self.nd, self.meses, self.piso, self.subida)
         for _i, _f, pico, _n in self._sug:
             li = pg.InfiniteLine(pos=pico, angle=90,
-                                 pen=pg.mkPen("#6a6a6a", width=1, style=Qt.PenStyle.DotLine))
+                                 pen=pg.mkPen(estilo.BORDER_STRONG, width=1,
+                                              style=Qt.PenStyle.DotLine))
             self.plot.addItem(li)
             self._picos.append(li)
-        a, b = self.janela.getRegion()
-        navista = sorted({n for i, f, _p, n in self._sug if not (f < a - 0.5 or i > b + 0.5)})
-        txt = " · ".join(f"{n:.1f}" for n in navista) or "—"
-        self.lb_leitura.setText(f"<span style='color:#999'>motor lê</span> <b>{txt}</b> ciclo/ano")
 
     def _limiar_mudou(self):
         self.lb_piso.setText(f"{self.piso:.2f}")
@@ -435,6 +619,7 @@ class PainelCiclo(QWidget):
         self._atualiza_sugestao()
         if not self._tocado:
             self._sugere(_manter=True)
+        self._escreve_titulo()
 
     def _sugere(self, force=False, _manter=False):
         """⚠️ So' as faixas DENTRO DA JANELA A' VISTA: criar faixa para os quatro anos de uma vez
@@ -445,6 +630,7 @@ class PainelCiclo(QWidget):
             return
         for f in self._faixas:
             self.plot.removeItem(f["reg"])
+            self.plot.removeItem(f["txt"])
         self._faixas = []
         self._foco = -1
         a, b = self.janela.getRegion()
@@ -468,8 +654,13 @@ class PainelCiclo(QWidget):
             li.setHoverPen(pg.mkPen("#ffffff", width=4))
         reg.setZValue(-10)
         self.plot.addItem(reg)
+        txt = pg.TextItem("", anchor=(0.5, 0))
+        f_ = QFont(); f_.setPixelSize(12); f_.setBold(True)
+        txt.setFont(f_)
+        txt.setZValue(6)
+        self.plot.addItem(txt)
         f = {"ini": ini, "fim": fim, "cultura": cultura,
-             "confianca": confianca or CONFIANCA[0], "reg": reg}
+             "confianca": confianca or CONFIANCA[0], "reg": reg, "txt": txt}
         self._faixas.append(f)
         reg.sigRegionChanged.connect(lambda *_: self._regiao_mudou(f))
         reg.sigRegionChangeFinished.connect(lambda *_: setattr(self, "_tocado", True))
@@ -483,14 +674,16 @@ class PainelCiclo(QWidget):
         return self._vb().mapSceneToView(ev.scenePos()).x()
 
     def _clicou_curva(self, ev):
-        """Clique dentro de uma faixa seleciona aquela faixa."""
-        if not self._faixas or ev.button() != Qt.MouseButton.LeftButton:
+        """Clique na curva: seleciona a faixa sob ele E leva o mapa para aquele mes."""
+        if not self.meses or ev.button() != Qt.MouseButton.LeftButton:
             return
         x = self._x_do_evento(ev)
-        for i, f in enumerate(self._faixas):
+        i = int(np.clip(round(x), 0, len(self.meses) - 1))
+        self.mesEscolhido.emit(int(self.meses[i]))
+        for k, f in enumerate(self._faixas):
             if f["ini"] - 0.5 <= x <= f["fim"] + 0.5:
-                if i != self._foco:
-                    self._foca(i)
+                if k != self._foco:
+                    self._foca(k)
                 return
 
     def _arrastou_curva(self, ev, axis=None):
@@ -547,6 +740,7 @@ class PainelCiclo(QWidget):
         if not (0 <= i < len(self._faixas)):
             return
         self.plot.removeItem(self._faixas[i]["reg"])
+        self.plot.removeItem(self._faixas[i]["txt"])
         self._faixas.pop(i)
         self._tocado = True
         self._refaz_chips()
@@ -557,10 +751,52 @@ class PainelCiclo(QWidget):
             return
         f = self._faixas[self._foco]
         f["cultura"] = self.ed_cultura.currentText().strip()
-        f["confianca"] = self.cb_conf.currentText()
+        f["confianca"] = self.seg_conf.valor() or CONFIANCA[0]
         self._tocado = True
         self._pinta()
         self._texto_chip(self._foco)
+        self._marca_rapida(f["cultura"])
+
+    # ================= culturas de um clique =================
+    def _atualiza_rapidas(self):
+        """Os botoes das culturas mais provaveis: as mais gravadas primeiro, depois as de sempre."""
+        while self.rapidas.count():
+            w = self.rapidas.takeAt(0).widget()
+            if w:
+                w.setParent(None)
+        conhecidas = {c.lower(): c for c in self._conhecidas()}
+        ordem, vistos = [], set()
+        for c in list(self._mais_usadas()) + RAPIDAS:
+            k = c.lower()
+            if k in vistos or (k not in conhecidas and c not in RAPIDAS):
+                continue
+            vistos.add(k)
+            ordem.append(conhecidas.get(k, c))
+        self._bts_rapidos = {}
+        for c in ordem[:N_RAPIDAS]:
+            b = QPushButton(c)
+            b.setObjectName("cultura")
+            b.setCheckable(True)
+            b.setIcon(qta.icon("mdi6.circle", color=self.cor_de(c) or estilo.TEXT_3))
+            b.setIconSize(QSize(11, 11))
+            b.setToolTip(f"esta faixa é {c}")
+            b.clicked.connect(lambda _, c=c: self.escolhe_cultura(c))
+            self.rapidas.addWidget(b)
+            self._bts_rapidos[c.lower()] = b
+
+    def escolhe_cultura(self, c):
+        """Um clique: nomeia a faixa em foco e passa para a proxima ainda sem nome."""
+        if not (0 <= self._foco < len(self._faixas)):
+            return
+        self.ed_cultura.setCurrentText(c)          # dispara _foco_editado
+        prox = [k for k, f in enumerate(self._faixas) if not f["cultura"]]
+        depois = [k for k in prox if k > self._foco] or prox
+        if depois:
+            self._foca(depois[0])
+
+    def _marca_rapida(self, cultura):
+        for k, b in getattr(self, "_bts_rapidos", {}).items():
+            b.setChecked(k == (cultura or "").lower())
 
     # ================= foco e chips =================
     def _foca(self, i):
@@ -577,7 +813,8 @@ class PainelCiclo(QWidget):
     def _mostra_foco(self):
         f = self._faixas[self._foco]
         self.lb_faixa.setText(
-            f"<b>Faixa {self._foco + 1}/{len(self._faixas)}</b> &nbsp; "
+            f"<b>Faixa {self._foco + 1}</b> <span style='color:{estilo.TEXT_2}'>de "
+            f"{len(self._faixas)}</span> &nbsp; "
             f"<span style='color:{COR_FOCO}'>{rotulo_mes(self.meses[f['ini']])} → "
             f"{rotulo_mes(self.meses[f['fim']])}</span>")
         conhecidas = sorted(set(self._conhecidas()))
@@ -590,9 +827,8 @@ class PainelCiclo(QWidget):
         self.ed_cultura.setCompleter(comp)
         self.ed_cultura.setCurrentText(f["cultura"])
         self.ed_cultura.blockSignals(False)
-        self.cb_conf.blockSignals(True)
-        self.cb_conf.setCurrentText(f["confianca"])
-        self.cb_conf.blockSignals(False)
+        self.seg_conf.marca(f["confianca"])
+        self._marca_rapida(f["cultura"])
 
     def _chips(self):
         return [self.fila.itemAt(i).widget() for i in range(self.fila.count())
@@ -615,14 +851,17 @@ class PainelCiclo(QWidget):
         chips = self._chips()
         if 0 <= i < len(chips):
             f = self._faixas[i]
-            chips[i].texto(f"{i + 1}. {f['cultura'] or '—'}", i == self._foco)
+            chips[i].texto(f"{i + 1}. {f['cultura'] or '?'}", i == self._foco,
+                           self.cor_de(f["cultura"]))
 
     def _pinta(self):
-        """A em foco acesa, as outras esmaecidas; a duvida mais apagada que a certeza."""
+        """Cada faixa na cor da sua cultura; a em foco acesa, a duvida mais apagada que a certeza."""
         for i, f in enumerate(self._faixas):
             foco = (i == self._foco)
-            cor = pg.mkColor(COR_FOCO if foco else COR_FUNDO)
-            cor.setAlpha(ALFA.get(f["confianca"], 70) if foco else 25)
+            base = self.cor_de(f["cultura"]) or (COR_FOCO if foco else COR_FUNDO)
+            cor = pg.mkColor(base)
+            alfa = ALFA.get(f["confianca"], 70)
+            cor.setAlpha(alfa if foco else int(alfa * 0.55))
             f["reg"].setBrush(pg.mkBrush(cor))
             # ⚠️ o hoverBrush do LinearRegionItem e' calculado NO CONSTRUTOR a partir da cor padrao
             # (azul); trocar so' o brush deixa a faixa azul-escura assim que o mouse passa por cima.
@@ -632,9 +871,13 @@ class PainelCiclo(QWidget):
             # ⚠️ so' a faixa em foco se arrasta: com varias moveis, arrastar a errada e' questao de
             # tempo, e a resposta de um talhao vai para o mes de outra lavoura sem ninguem notar.
             f["reg"].setMovable(foco)
+            borda = COR_FOCO if foco else pg.mkColor(base).darker(110)
             for li in f["reg"].lines:
-                li.setPen(pg.mkPen(COR_FOCO if foco else COR_FUNDO, width=3 if foco else 1))
+                li.setPen(pg.mkPen(borda, width=3 if foco else 1))
             f["reg"].update()
+            rot = f"{i + 1} · {f['cultura'] or '?'}"
+            f["txt"].setText(rot, color=estilo.TEXT if foco else estilo.TEXT_2)
+            f["txt"].setPos((f["ini"] + f["fim"]) / 2, 1.04)
 
     # ================= saida =================
     def segmentos(self):
@@ -644,15 +887,11 @@ class PainelCiclo(QWidget):
                 for f in sorted(self._faixas, key=lambda f: f["ini"])]
 
     def _emite(self):
+        if self.rc is None:
+            return
         segs = [s for s in self.segmentos() if s["cultura"]]
         if segs:
             self.gravar.emit(segs)
         else:
-            self.titulo.setText("<b style='color:#e8a33d'>Escreva o que foi plantado antes de "
-                                "gravar.</b>")
-
-
-def _rot(txt):
-    l = QLabel(txt)
-    l.setObjectName("rotulo")
-    return l
+            self._escreve_titulo(erro="Escolha o que foi plantado antes de gravar")
+            self.recado.emit("Escolha o que foi plantado em pelo menos uma faixa", "erro")

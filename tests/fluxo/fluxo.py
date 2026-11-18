@@ -17,7 +17,8 @@ estilo.aplica(app)
 from cycle_navigator.config import carrega
 from cycle_navigator.app import monta_app
 from cycle_navigator.janela import IDENTIFICAR, DESENHAR, EDITAR
-cfg = carrega(r"D:\NAVIGATOR\cycle-navigator.toml")
+# o .toml vem de CN_CONFIG (test_fluxo_real.py o passa); o caminho do PC do LSIE fica so como padrao
+cfg = carrega(os.environ.get("CN_CONFIG", r"D:\NAVIGATOR\cycle-navigator.toml"))
 etapa("monta_app"); ctx = monta_app(cfg, app)
 ctx.win.resize(1600, 980); ctx.win.show(); app.processEvents()
 etapa("levantador"); ctx.p_pontos.ed_levantador.setText("teste")

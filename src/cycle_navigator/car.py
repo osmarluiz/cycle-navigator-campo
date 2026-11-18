@@ -32,6 +32,7 @@ from PyQt6.QtWidgets import QGraphicsPolygonItem, QLabel
 
 log = logging.getLogger(__name__)
 
+ESCALA_MAX = 14            # px da imagem por px de tela: mais afastado que isto, contorno vira borrao
 VERTICES_MAX = 400_000     # acima disto a vista tem poligonos demais para desenhar sem travar
 LOD_TOL_PX = 12            # tolerancia da versao simplificada (~57 m): vale para a escala larga
 COR = "#e0b84a"
@@ -73,7 +74,7 @@ class CamadaCAR:
         self.card.setWordWrap(True)
         self.card.setMaximumWidth(380)
         self.card.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.card.move(16, 16)
+        self.card.move(14, 72)        # abaixo das ferramentas que flutuam no canto
         self.card.hide()
         self.px_ha = abs(transform.a * transform.e) / 1e4 if transform is not None else None
         try:
@@ -135,14 +136,18 @@ class CamadaCAR:
         self.redesenha()
 
     # ---------- selecao ----------
-    def seleciona(self, i):
-        """Destaca o imovel i e mostra o cartao com o que o CAR sabe dele."""
+    def seleciona(self, i, cartao=True):
+        """Destaca o imovel i e mostra o cartao com o que o CAR sabe dele (`cartao=False`: so' o
+        contorno -- e' como o talhao que deu a curva aparece com a camada desligada)."""
         if not self.ok or not (0 <= i < self.n):
             return
         c, r = self.aneis[i]
         self._sel.setPolygon(QPolygonF([QPointF(float(x), float(y)) for x, y in zip(c, r)]))
         self._sel.show()
         self.selecionado = i
+        if not cartao:
+            self.card.hide()
+            return
         self.card.setText(self._html(self.attr[i], self.polys[i].area * self.px_ha
                                      if self.px_ha else None))
         self.card.adjustSize()
@@ -194,6 +199,12 @@ class CamadaCAR:
             self._linha.clear()
             return
         r = self.view.vb.viewRect()
+        # ⚠️ AFASTADO DEMAIS, NAO DESENHA. Na escala do municipio os 52 mil talhoes cobriam a imagem
+        # inteira de azul: a camada "funcionava" e o mapa sumia. Contorno e' para se ler de perto.
+        if r.width() / max(1, self.view.width()) > ESCALA_MAX:
+            self.escondida = True
+            self._linha.clear()
+            return
         from shapely.geometry import box
         idx = self.tree.query(box(r.x(), r.y(), r.x() + r.width(), r.y() + r.height()))
         self.em_vista = len(idx)
