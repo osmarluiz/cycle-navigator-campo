@@ -315,6 +315,14 @@ coisas**. O que ficou decidido, e não deve ser desfeito:
 - Faixa na curva é um véu (alfa 62/40/22), não um bloco; `TEXT_3` tem contraste ≥ 4,5:1.
 - `texto.py`: `plural()` e `data_br()`. Nada de "(s)", "(ões)" nem data ISO na tela.
 
+**Fronteira com o TS Annotator (decisão do Osmar, 2026-11-18)**: as funcionalidades das duas
+ferramentas ficam **separadas**. O Cycle Navigator existe para **colher a verdade dos agricultores**;
+busca por exemplo, descoberta de padrões, sugestão ativa, treino e classificação são do TSA e não
+entram aqui, mesmo já estando instalados como dependência (medido: `SelectionEngine.similar_to`
+responde em < 1 s nos dados da RIDE — e ainda assim não é papel desta ferramenta). O que sai daqui
+para lá são os pontos, que já são gravados no formato do `AnnotationStore`. Melhorias aqui servem a
+uma pergunta só: a resposta do produtor foi registrada certa, completa e sem perda?
+
 **Ainda por fazer do que ele pediu**: os comandos de edição de vértice continuam os do
 `PolyLineROI` (arrastar, clicar na linha, botão direito apaga) — falta desfazer no ajuste e snap;
 editar atributos direto na tabela; todas as safras numa tabela só.
