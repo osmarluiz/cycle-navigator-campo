@@ -92,7 +92,7 @@ com `aoi = "F:/sits_aoi_crop"`.
 | módulo | faz |
 |---|---|
 | `config.py` | lê o `.toml` (tolera BOM), resolve caminhos relativos à pasta do `.toml`, agrupa meses em **safras completas** (out→set), auto-detecta `car/` e `sam/`, lista de classes padrão |
-| `app.py` | monta tudo (`monta_app(cfg, app)` devolve um `SimpleNamespace` com cada peça, usado pelos testes); handlers de clique por modo; exportações; `main()` |
+| `app.py` | só a partida: `monta_app(cfg, app)` cria o `ctx` e instala as peças de `montagem/` em ordem (ver §10); `main()`, `--autoteste`, tela acordada no Mac |
 | `janela.py` | `BarraTopo` (Safra, Data ◀ ▶, Ver como, Levantador; modos Identificar/Desenhar/Editar; Tabelas, Exportar; botões CAR e SAM) e `JanelaCampo` (mapa em cima, curva embaixo, atalhos, `para_threads()`) |
 | `ciclos.py` | `PainelCiclo`: curva NDVI do ano, faixa de contexto da série toda, faixas (bandas) com bordas que grudam no mês, detecção pelo motor por safra, chips, cultura em texto livre com autocompletar, confiança |
 | `pontos.py` | camada de pontos, `PainelPontos`, `abre_store()` → `pontos_{safra}.json` (formato do AnnotationStore do ts-annotator, um arquivo por safra) |
@@ -183,7 +183,7 @@ macOS arm64 em `macos-latest`, macOS x64 em `macos-15-intel`) → `build/monta_s
   comentários o acento é opcional, o repositório mistura). Comentários que explicam uma armadilha
   começam com `⚠️`; os que explicam uma garantia de projeto, com `⚠️⚠️`.
 - Commits pequenos, mensagem em português dizendo o quê e por quê, terminando com
-  `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Identidade git: Osmar L. F. de Carvalho.
+  `Co-Authored-By: Claude <modelo da sessão> <noreply@anthropic.com>` (o modelo que de fato escreveu). Identidade git: Osmar L. F. de Carvalho.
 - Testes offscreen antes de mudar interface (`QT_QPA_PLATFORM=offscreen`); use `isHidden()`, não
   `isVisible()`, porque offscreen nada é "visível".
 - Interface: tokens em `estilo.py`, nunca cor solta no widget; `objectName` liga ao QSS; sem negrito
@@ -203,3 +203,62 @@ disco de campo montado (287 GB, tamanhos conferidos, programa abriu direto do di
 Próximos passos prováveis, por ordem: (1) rodar do código no Air e corrigir o que for específico de
 macOS; (2) release `v1.0.0`; (3) carregar CAR/SAM sob demanda; (4) notarização, se os alunos usarem
 Mac em número.
+
+## 10. O que entrou no MacBook Air em 2026-11-18
+
+O programa rodou pela primeira vez num Mac de verdade (Air M5, 24 GB, tela de 1470 × 956 pontos),
+do código e empacotado. O que mudou nesse dia, e que as seções acima ainda não contam:
+
+**Módulos novos** (`src/cycle_navigator/`, agora ~6.000 linhas):
+
+| módulo | faz |
+|---|---|
+| `montagem/` | o antigo `monta_app` de 1.200 linhas, cortado em 16 peças. Cada uma tem `instala(ctx)`: lê do `ctx` o que as anteriores deixaram, escreve o que cria. A ordem está em `montagem/__init__.py` (`ORDEM`) e **importa**. `fontes.py` abre os rasters |
+| `recorte.py` | `RecorteVivo`: SAM 2.1 no clique (torch + MPS). Bloco de 1024 px em cache, escalas 1/2/4 quando a máscara encosta na borda. **Opcional de ponta a ponta**: sem `torch`, `sam2` ou o modelo em `~/CycleNavigator/modelos/`, o botão "Recortar" some e o resto funciona |
+| `analise.py` | painel de análise: `resume()` e `pendencias()` puras (testadas) e `JanelaAnalise` (números, sistemas, calendário, vigor, o que conferir) |
+| `sugestoes.py`, `janela_sugestoes.py` | caixa de sugestões: uma fila de `dados/sugestoes/<id>.json` (+ `.png` da tela). Quem responde é uma sessão de Claude Code: `tools/vigia_sugestoes.py` avisa, `tools/sugestoes.py` lê e responde, a skill `.claude/skills/responder-sugestoes` diz como |
+| `arquivos.py` | arquivo ilegível é **posto de lado** com outro nome (`.danificado-<data>`), nunca apagado nem sobrescrito |
+| `busca.py`, `posicao.py` | busca por município, CAR ou coordenada; "Onde estou" (QtPositioning) |
+
+**Como se usa agora**: a origem da curva é uma escolha de três, `Talhão | Recortar | Ponto`. Clicar
+onde não há talhão pronto aciona o recorte sozinho (recusado acima de 400 ha ou com nota < 0,75;
+nota < 0,8 mostra "contorno incerto — confira"). ⇧-clique soma um ponto ao recorte aberto, ⌥-clique
+tira. O ponto gravado guarda `fonte_curva`, `contorno`, `recorte_pontos`, `recorte_nota`, `talhao_ha`.
+A exportação leva uma segunda camada, `talhoes`, com um polígono por talhão.
+
+**Regras novas**:
+
+- **Sugestão nunca é implementada sem o ok explícito do Osmar.** Pergunta de informação pode ser
+  respondida direto; mudança no programa, só depois de ele aprovar.
+- **Tamanho de arquivo é teste** (`tests/test_padrao_do_codigo.py`): peça de `montagem/` até 300
+  linhas; os grandes antigos têm teto próprio que só pode descer. Dívida conhecida: `ciclos.py` (897),
+  `janela.py` (489), `analise.py` (437), `fazendas.py` (360), `car.py` (318) e a função `ao_clicar`
+  (~130 linhas, em `montagem/clique.py`). Cortar é **mover**, não reescrever.
+- **Testes nunca tocam `~/CycleNavigator/dados/pontos`.** Use uma pasta de trabalho com links para
+  `cube`, `input`, `products`, `car`, `sam` e uma `pontos` própria, apontada por `CN_CONFIG`.
+
+**Armadilhas pagas neste dia**:
+
+- ⚠️ **`pyproj` e `rasterio` trazem cada um uma `libproj` com o mesmo nome**; o PyInstaller guarda uma
+  só e a exportação saía sem CRS, só no `.app`. `build/corrige_dylibs_mac.py` religa.
+- ⚠️ **`torchvision` precisa de `collect_all` no spec**, senão o modelo morre em
+  "operator torchvision::nms does not exist", só no pacote.
+- ⚠️ **`cycle-navigator --autoteste`** existe para isso: roda o que só quebra depois de empacotar
+  (pyproj, clique, recorte, análise, sugestões), sem gravar nada; sai 0 ou 1. Rode após cada build.
+- ⚠️ **Trocar de safra com um talhão aberto** gravava faixas do ano errado; agora o talhão reabre na
+  safra nova. **Clique perto de um ponto gravado** reabria o vizinho; só gruda se o clique não cair
+  dentro de outro talhão.
+- ⚠️ **`deleteLater()` ao refazer uma lista** deixa o widget velho por cima do novo por um instante;
+  `setParent(None)` antes.
+- ⚠️ **A barra de cima tinha largura mínima de 1601 px**, maior que a tela do Air; o mapa abria com
+  faixas pretas. Hoje são 1347, e `enquadra_largura` ajusta o mapa ao abrir.
+- A tela do Mac apagava no meio da conversa: o programa chama `caffeinate` enquanto está aberto.
+- Abrir leva ~11 s no Air (não os ~40 s do PC), ainda com CAR e SAM na partida.
+
+**Ambientes no Air**: `~/ENV/navigator` (desenvolvimento, com torch/sam2), `~/ENV/build` (só
+PyInstaller; `pip install .` antes de cada build). Build local:
+`pyinstaller --noconfirm --distpath build/dist --workpath build/work build/cycle-navigator.spec`.
+O build do GitHub Actions **não** instala torch/sam2: os pacotes de lá saem sem o recorte na hora.
+
+**Sem teste até aqui**: "Onde estou" (depende da permissão do macOS), e tudo o que é novo neste
+dia em Windows e em Mac Intel.
