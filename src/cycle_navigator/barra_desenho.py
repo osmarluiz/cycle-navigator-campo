@@ -90,8 +90,12 @@ class BarraDesenho(QWidget):
     def mostra(self, ferramenta, fase, pode_concluir, pode_desfazer, auto=True):
         """`fase`: "vazio" | "tracando" | "proposta" | "ajuste" (contorno fechado, vertices soltos)."""
         self.bts[AUTO].setVisible(auto)
-        if ferramenta in self.bts:
-            self.bts[ferramenta].setChecked(True)
+        # ⚠️ com o contorno ja' fechado nenhuma ferramenta esta' "em uso": deixar uma acesa dizia
+        # que o proximo clique ia desenhar, quando ele so' ajusta vertices
+        self.grupo.setExclusive(False)
+        for chave, b in self.bts.items():
+            b.setChecked(chave == ferramenta and fase != "ajuste")
+        self.grupo.setExclusive(True)
         self.dica.setText(DICAS["ajuste"] if fase == "ajuste" else DICAS.get((ferramenta, fase), ""))
         self.bt_conclui.setEnabled(pode_concluir)
         self.bt_desfaz.setEnabled(pode_desfazer)

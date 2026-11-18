@@ -312,8 +312,8 @@ class DialogoFazenda(QDialog):
         self.nome = QLineEdit(d.get("nome", "")); self.nome.setPlaceholderText("ex.: Fazenda do João")
         self.dono = QLineEdit(d.get("proprietario", ""))
         self.contato = QLineEdit(d.get("contato", "")); self.contato.setPlaceholderText("telefone / WhatsApp")
-        self.status = QComboBox(); self.status.addItems(STATUS)
-        self.status.setCurrentText(d.get("status") or STATUS[0])
+        self.status = QComboBox(); [self.status.addItem(s.replace("nao", "não").capitalize(), s) for s in STATUS]
+        self.status.setCurrentIndex(max(0, self.status.findData(d.get("status") or STATUS[0])))
         self.data = QLineEdit(d.get("data_visita") or date.today().isoformat())
         self.obs = QPlainTextEdit(d.get("obs", "")); self.obs.setMaximumHeight(90)
         form.addRow("Fazenda", self.nome)
@@ -323,7 +323,7 @@ class DialogoFazenda(QDialog):
         form.addRow("Data", self.data)
         form.addRow("Observações", self.obs)
         if d.get("area_ha"):
-            form.addRow("Área", QLabel(f"<b>{d['area_ha']:,.1f}</b> ha".replace(",", ".")))
+            form.addRow("Área", QLabel(f"<b>{d['area_ha']:,.1f}</b> ha".replace(",", "X").replace(".", ",").replace("X", ".")))
         if d.get("car"):
             # bloco so'-leitura: o que o CAR publico sabe deste imovel (sem dono nem contato)
             from .car import CAMPOS
@@ -355,6 +355,6 @@ class DialogoFazenda(QDialog):
         return {"nome": self.nome.text().strip(),
                 "proprietario": self.dono.text().strip(),
                 "contato": self.contato.text().strip(),
-                "status": self.status.currentText(),
+                "status": self.status.currentData(),
                 "data_visita": self.data.text().strip() or date.today().isoformat(),
                 "obs": self.obs.toPlainText().strip()}

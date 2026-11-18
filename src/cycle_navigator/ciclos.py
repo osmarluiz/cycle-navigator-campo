@@ -195,7 +195,7 @@ class PainelCiclo(QWidget):
         vz.setContentsMargins(4, 6, 4, 6)
         vz.setSpacing(10)
         vz.addStretch(1)
-        for i, txt in enumerate(("Clique num talhão no mapa",
+        for i, txt in enumerate(("Clique num ponto do mapa",
                                  "Diga o que foi plantado em cada faixa do ano",
                                  "Gravar"), 1):
             n = QLabel(str(i)); n.setObjectName("num")
@@ -306,7 +306,7 @@ class PainelCiclo(QWidget):
         self.bt_gravar.setIcon(qta.icon("mdi6.check-bold", color=estilo.ON_ACCENT))
         self.bt_gravar.setIconSize(QSize(18, 18))
         self.bt_gravar.setMinimumWidth(124)
-        self.bt_gravar.setToolTip("gravar o talhão (⌘S)")
+        self.bt_gravar.setToolTip("gravar o que foi dito deste ponto (⌘S)")
         self.bt_gravar.setDefault(True)
         f1.addWidget(self.bt_gravar)
         lay.addLayout(f1)

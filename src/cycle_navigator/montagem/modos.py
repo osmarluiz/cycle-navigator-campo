@@ -50,7 +50,14 @@ def instala(ctx):
         """A barra diz o que o proximo clique faz; some fora do Desenhar."""
         if estado["modo"] != DESENHAR:
             barra_des.hide()
+            win.extra_topo = 0
+            ctx.alfinete.setVisible(True)
+            ctx.p_ciclo.setVisible(True)        # volta o que estava identificado
             return
+        # ⚠️⚠️ DESENHANDO, SO' O DESENHO: o alfinete e a serie do ultimo pixel identificado nao
+        # dizem respeito ao contorno e disputavam a tela com ele.
+        ctx.alfinete.setVisible(False)
+        ctx.p_ciclo.setVisible(False)           # o divisor entrega a altura toda ao mapa
         if desenho._roi is not None:
             fase = "ajuste"
             _pt_br_no_menu_do_vertice()
@@ -70,6 +77,7 @@ def instala(ctx):
         barra_des.mostra(estado["ferramenta"], fase, pode, volta, auto=ctx.recorte.ok)
         barra_des.move(14, 14 + win.barra.ferramentas.height() + 8)
         barra_des.show(); barra_des.raise_()
+        win.extra_topo = barra_des.height() + 8     # o aviso desce: nao pode cobrir a barra
 
     def _larga_proposta():
         estado["auto"] = None

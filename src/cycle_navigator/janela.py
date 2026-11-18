@@ -427,7 +427,7 @@ class JanelaCampo(QMainWindow):
         d.raise_()
         if self.aviso.isVisible():
             self.aviso.adjustSize()
-            self.aviso.move((v.width() - self.aviso.width()) // 2, 18 + self.barra.ferramentas.height())
+            self.aviso.move((v.width() - self.aviso.width()) // 2, 18 + self.barra.ferramentas.height() + getattr(self, 'extra_topo', 0))
             self.aviso.raise_()
 
     def _enter(self):
