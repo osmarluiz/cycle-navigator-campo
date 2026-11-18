@@ -241,6 +241,11 @@ A exportação leva uma segunda camada, `talhoes`, com um polígono por talhão.
 
 - ⚠️ **`pyproj` e `rasterio` trazem cada um uma `libproj` com o mesmo nome**; o PyInstaller guarda uma
   só e a exportação saía sem CRS, só no `.app`. `build/corrige_dylibs_mac.py` religa.
+- ⚠️ **O caminho religado não pode ser mais comprido que o da wheel**: nas wheels x86_64 o cabeçalho
+  Mach-O não tem folga e o `install_name_tool` recusava; o build de Mac Intel quebrou assim. Cada
+  pacote ganha um link curto `dl -> __dot__dylibs`. Conferido aqui com as wheels x86_64 baixadas.
+- ⚠️ **Teste offscreen que gira `processEvents()` à mão não entrega `deleteLater`**: parece vazamento
+  de memória e não é. Chame `QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)`.
 - ⚠️ **`torchvision` precisa de `collect_all` no spec**, senão o modelo morre em
   "operator torchvision::nms does not exist", só no pacote.
 - ⚠️ **`cycle-navigator --autoteste`** existe para isso: roda o que só quebra depois de empacotar
