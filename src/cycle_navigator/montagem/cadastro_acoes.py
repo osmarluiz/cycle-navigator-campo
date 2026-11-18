@@ -61,8 +61,18 @@ def instala(ctx):
             return
         QMessageBox.information(tabs, "Exportar", f"{n} feição(ões) em\n{dest}")
 
+    def _qual(fid):
+        """⚠️ Botao da tabela sem linha escolhida nao fazia nada, calado. Com uma fazenda so' nao ha'
+        duvida de qual e'; com varias, pede a linha."""
+        if fid is None and len(cadastro.fazendas) == 1:
+            fid = cadastro.fazendas[0]["id"]
+        if fid is None:
+            QMessageBox.information(tabs, "Fazendas", "Clique primeiro na linha da fazenda.")
+        return fid
+
     def preenche(fid):
-        f = cadastro.por_id(fid)
+        fid = _qual(fid)
+        f = cadastro.por_id(fid) if fid is not None else None
         if f is None:
             return
         dlg = DialogoFazenda(f, win)
@@ -72,8 +82,11 @@ def instala(ctx):
             tabs.fazendas.lista(cadastro, selecionar=fid)
 
     def exclui(fid):
+        fid = _qual(fid)
         if fid is None:
             return
+        if cam_faz.oculto == fid:               # e' a que esta' com o contorno aberto para redesenho
+            ctx.usa_modo("identificar")
         f = cadastro.por_id(fid)
         if QMessageBox.question(tabs, "Excluir",
                                 f"Excluir a fazenda '{(f or {}).get('nome') or fid}'?"
@@ -87,3 +100,4 @@ def instala(ctx):
     ctx.exclui = exclui
     ctx.exporta_camada = exporta_camada
     ctx.preenche = preenche
+    ctx.qual_fazenda = _qual

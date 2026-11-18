@@ -42,7 +42,6 @@ def instala(ctx):
         win._posiciona()
         if cam_car is not None:
             ctx.aviso_car()
-        tabs.fazendas.setEnabled(m != DESENHAR)
         if m == DESENHAR:
             cam_faz.oculto = fid
             cam_faz.redesenha()

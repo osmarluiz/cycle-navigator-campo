@@ -20,17 +20,58 @@ def normaliza(s):
     return "".join(c for c in s if not unicodedata.combining(c)).lower().strip()
 
 
+_NUM = r"-?\d+(?:[.,]\d+)?"
+_GMS = re.compile(rf"({_NUM})\s*[°º]\s*(?:({_NUM})\s*['’′]\s*)?(?:({_NUM})\s*(?:\"|”|″|'')\s*)?\s*([NSEWOL])?",
+                  re.I)
+
+
+def _f(n):
+    return float(n.replace(",", "."))
+
+
+def _utm_23s(x, y):
+    """⚠️ UTM sem zona escrita: vale a das imagens (23 Sul, EPSG:32723)."""
+    try:
+        from pyproj import Transformer
+        lon, lat = Transformer.from_crs(32723, 4326, always_xy=True).transform(x, y)
+        return lat, lon
+    except Exception:
+        return None
+
+
 def coordenada(txt):
-    """'-15.79, -47.88' | '-15,79 -47,88' | '-15 -47' -> (a, b) em graus, ou None."""
-    t = str(txt or "").strip()
+    """O que as pessoas colam: '-15.79, -47.88' | '-15,79 -47,88' | '15.79S 47.88W' |
+    15°47'38"S 47°52'58"W | '15 47 38 S 47 52 58 W' | 'lat -15.79 lon -47.88' | UTM '219578 8178548'.
+    -> (a, b) em graus (a ordem lat/lon quem resolve e' quem usa), ou None."""
+    t = re.sub(r"(?i)\b(latitude|longitude|lat|long|lon|lng)\b\.?\s*[:=]?", " ", str(txt or "")).strip()
     if not t or re.search(r"[A-Za-z]{2,}", t):
         return None
-    for padrao in (r"-?\d+[.,]\d+", r"-?\d+"):
-        nums = re.findall(padrao, t)
+    sinal = lambda letra: -1 if (letra or "").upper() in ("S", "W", "O") else 1
+    gms = _GMS.findall(t)
+    if len(gms) == 2:
+        out = []
+        for g, m, s, h in gms:
+            v = abs(_f(g)) + (_f(m) / 60 if m else 0) + (_f(s) / 3600 if s else 0)
+            out.append(v * (-1 if g.startswith("-") else sinal(h)))
+        return tuple(out) if all(abs(v) <= 180 for v in out) else None
+    letras = re.findall(r"(?<![A-Za-z])[NSEWOLnsewol](?![A-Za-z])", t)
+    # ⚠️ a virgula tanto separa ("-15,-47") quanto e' decimal ("-15,79"): tenta o numero inteiro
+    # com decimal, depois so' os decimais, depois so' os inteiros -- fica a primeira leitura com 2
+    for padrao in (_NUM, r"-?\d+[.,]\d+", r"-?\d+"):
+        nums = [_f(n) for n in re.findall(padrao, t)]
+        if len(nums) in (4, 6) and len(letras) == 2:          # graus minutos (segundos) sem simbolo
+            k = len(nums) // 2
+            nums = [abs(p[0]) + p[1] / 60 + (p[2] / 3600 if k == 3 else 0)
+                    for p in (nums[:k], nums[k:])]
         if len(nums) == 2:
-            a, b = (float(n.replace(",", ".")) for n in nums)
+            a, b = nums
+            if len(letras) == 2:
+                a, b = abs(a) * sinal(letras[0]), abs(b) * sinal(letras[1])
             if abs(a) <= 180 and abs(b) <= 180:
                 return a, b
+            x, y = sorted((abs(a), abs(b)))
+            if 1e5 <= x <= 9e5 and 1e6 <= y <= 1e7:           # metros: UTM
+                return _utm_23s(x, y)
             return None
     return None
 

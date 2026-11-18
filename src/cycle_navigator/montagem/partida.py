@@ -43,7 +43,12 @@ def instala(ctx):
     win.desfezVertice.connect(desenho.desfaz_vertice)
     view.pixelClicked.connect(clique_do_mapa)
     p_ciclo.gravar.connect(ao_gravar)
-    tabs.fazendas.editarContorno.connect(lambda fid: fid and usa_modo(DESENHAR, fid))
+    def redesenha_contorno(fid):
+        fid = ctx.qual_fazenda(fid)
+        if fid is not None:
+            usa_modo(DESENHAR, fid)
+            win.raise_(); win.activateWindow()      # o contorno se edita no mapa, nao na tabela
+    tabs.fazendas.editarContorno.connect(redesenha_contorno)
     tabs.fazendas.editarDados.connect(preenche)
     tabs.fazendas.excluir.connect(exclui)
     tabs.fazendas.irPara.connect(centra_fazenda)

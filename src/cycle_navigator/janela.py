@@ -409,7 +409,7 @@ class JanelaCampo(QMainWindow):
             lambda: self.barra.passo(+1))
         QShortcut(QKeySequence(Qt.Key.Key_Escape), self).activated.connect(self.cancelou)
         for k in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            QShortcut(QKeySequence(k), self).activated.connect(self.confirmou)
+            QShortcut(QKeySequence(k), self).activated.connect(self._enter)
         QShortcut(QKeySequence(Qt.Key.Key_Backspace), self).activated.connect(self.desfezVertice)
         QShortcut(QKeySequence.StandardKey.Find, self).activated.connect(
             lambda: (self.barra.ed_busca.setFocus(), self.barra.ed_busca.selectAll()))
@@ -429,6 +429,16 @@ class JanelaCampo(QMainWindow):
             self.aviso.adjustSize()
             self.aviso.move((v.width() - self.aviso.width()) // 2, 18 + self.barra.ferramentas.height())
             self.aviso.raise_()
+
+    def _enter(self):
+        """⚠️ O atalho de janela chega ANTES do campo de texto: sem isto o Enter da busca nunca
+        buscava (so' funcionava o que se escolhia na lista de sugestoes; coordenada nao tem)."""
+        from PyQt6.QtWidgets import QApplication
+        w = QApplication.focusWidget()
+        if isinstance(w, QLineEdit):
+            w.returnPressed.emit(); w.editingFinished.emit()
+        else:
+            self.confirmou.emit()
 
     def avisa(self, texto, tipo="ok", ms=2600):
         """Um recado curto sobre o mapa que some sozinho: 'Gravado', 'Sem localização'..."""
