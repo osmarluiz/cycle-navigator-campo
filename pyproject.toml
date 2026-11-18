@@ -37,6 +37,7 @@ dependencies = [
 [project.optional-dependencies]
 pivots = ["geopandas>=0.13"]   # sobreposicao do cadastro de pivos: util, nao obrigatorio
 dev = ["pytest>=7"]
+recorte = ["torch>=2.3", "sam2>=1.1"]   # recorte do talhao na hora (SAM 2.1); o modelo (.pt) vai em modelos/
 
 [project.scripts]
 cycle-navigator = "cycle_navigator.app:main"
@@ -48,3 +49,9 @@ Annotator = "https://github.com/osmarluiz/ts-annotator"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# ⚠️ Arquivos que nao sao .py (a seta dos combos, o icone da janela) so' entram no pacote se
+# declarados aqui. Sem isto o `pip install .` do Actions os descartava, e o executavel saia sem
+# o chevron.svg -- o combo voltava a mostrar o quadradinho que o SVG existia para evitar.
+[tool.setuptools.package-data]
+cycle_navigator = ["_icones/*"]
