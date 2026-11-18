@@ -16,7 +16,7 @@ from cycle_navigator import estilo
 estilo.aplica(app)
 from cycle_navigator.config import carrega
 from cycle_navigator.app import monta_app
-from cycle_navigator.janela import IDENTIFICAR, DESENHAR, EDITAR
+from cycle_navigator.janela import IDENTIFICAR, DESENHAR
 # o .toml vem de CN_CONFIG (test_fluxo_real.py o passa); o caminho do PC do LSIE fica so como padrao
 cfg = carrega(os.environ.get("CN_CONFIG", r"D:\NAVIGATOR\cycle-navigator.toml"))
 etapa("monta_app"); ctx = monta_app(cfg, app)
@@ -45,23 +45,23 @@ for k in range(4):
     etapa(f"zoom aproximando {k}"); ctx.view.vb.setRange(xRange=(c_sam - 3000 // (k + 1), c_sam + 3000 // (k + 1)),
                                                         yRange=(r_sam - 3000 // (k + 1), r_sam + 3000 // (k + 1)), padding=0); app.processEvents()
 etapa("Esc limpa"); ctx.cancela(); app.processEvents()
-etapa("modo Editar + clique num talhao SAM -> adota (dialogo aceito)")
-with mock.patch("cycle_navigator.app.DialogoFazenda.exec", return_value=QDialog.DialogCode.Accepted), \
-     mock.patch("cycle_navigator.app.DialogoFazenda.dados", return_value={"nome": "Teste SAM", "proprietario": "x",
-                                                                           "contato": "", "status": "visitado",
-                                                                           "data_visita": "2026-10-19", "obs": ""}):
-    ctx.usa_modo(EDITAR); app.processEvents()
-    clique(r_sam, c_sam, 1)
-    etapa("Enter confirma"); ctx.confirma(); app.processEvents()
-etapa("fazendas apos adocao: %d" % len(ctx.cadastro))
-etapa("modo Desenhar + clique dentro do CAR -> semeia")
-ctx.usa_modo(DESENHAR); app.processEvents()
 class Ev:
     def __init__(self, x, y):
         self._p = ctx.view.vb.mapViewToScene(QPointF(x, y))
     def scenePos(self): return self._p
     def button(self): return Qt.MouseButton.LeftButton
     def double(self): return False
+    def modifiers(self): return Qt.KeyboardModifier.NoModifier
+etapa("Desenhar > Copiar contorno + clique num talhao pronto -> adota")
+ctx.usa_modo(DESENHAR); ctx.usa_ferramenta("copiar"); app.processEvents()
+ctx.no_clique(Ev(c_sam, r_sam)); app.processEvents()
+etapa("Enter confirma: o contorno e' gravado e o cadastro abre na aba Fazenda"); ctx.confirma(); app.processEvents()
+assert ctx.lugar.aba == "fazenda" and ctx.lugar.fazenda.fid is not None, "a aba Fazenda nao abriu com a fazenda nova"
+ficha = ctx.lugar.fazenda; ficha.nome.setText("Teste SAM"); ficha.dono.setText("x"); ficha._mexeu(); ficha._salva(); app.processEvents()
+etapa("fazendas apos adocao: %d" % len(ctx.cadastro))
+assert any(f.get("nome") == "Teste SAM" for f in ctx.cadastro.fazendas), "o cadastro da aba Fazenda nao foi salvo"
+etapa("Desenhar > Copiar contorno + clique dentro do CAR -> semeia")
+ctx.usa_modo(DESENHAR); ctx.usa_ferramenta("copiar"); app.processEvents()
 ctx.no_clique(Ev(c_car, r_car)); app.processEvents()
 etapa("Esc cancela o desenho"); ctx.cancela(); app.processEvents()
 etapa("volta a Identificar e clica de novo nos dois"); clique(r_car, c_car); clique(r_sam, c_sam)

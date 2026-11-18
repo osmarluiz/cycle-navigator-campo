@@ -77,9 +77,11 @@ def instala(ctx):
             return
         dlg = DialogoFazenda(f, win)
         if dlg.exec() == QDialog.DialogCode.Accepted:
-            cadastro.salva(fid, None, dlg.dados())
+            f = cadastro.salva(fid, None, dlg.dados())
             cam_faz.redesenha()
             tabs.fazendas.lista(cadastro, selecionar=fid)
+            if ctx.lugar.fazenda.fid == fid:
+                ctx.lugar.mostra_fazenda(f)
 
     def exclui(fid):
         fid = _qual(fid)
@@ -95,6 +97,25 @@ def instala(ctx):
         cadastro.remove(fid)
         cam_faz.redesenha()
         tabs.fazendas.lista(cadastro)
+        ctx.atualiza_busca()
+        if ctx.lugar.fazenda.fid == fid:
+            ctx.lugar.mostra_fazenda(None)
+        win.avisa("Fazenda excluída", "info")
+
+    def salva_ficha(fid, dados):
+        """A aba Fazenda gravou: o cadastro, o rotulo no mapa, a tabela e a busca acompanham."""
+        f = cadastro.salva(fid, None, dados)
+        cam_faz.redesenha()
+        tabs.fazendas.lista(cadastro, selecionar=fid)
+        ctx.atualiza_busca()
+        ctx.lugar.mostra_fazenda(f)
+        win.avisa(f"Cadastro salvo · {f.get('nome') or 'sem nome'}")
+
+    ficha = ctx.lugar.fazenda
+    ficha.salvou.connect(salva_ficha)
+    ficha.excluir.connect(exclui)
+    ficha.contorno.connect(lambda fid: ctx.usa_modo("desenhar", fid))
+    ficha.desenhar.connect(lambda: ctx.usa_modo("desenhar"))
 
     # o que esta peca deixa para as outras
     ctx.exclui = exclui

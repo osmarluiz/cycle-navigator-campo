@@ -7,12 +7,9 @@ lido quando a funcao roda, com tudo ja' montado.
 """
 import logging
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QDialog
 from ..barra_desenho import AUTO, COPIAR, POLIGONO, BarraDesenho
 from ..fazendas import DesenhoPoligono
-from ..fazendas import DialogoFazenda
 from ..janela import DESENHAR
-from ..janela import EDITAR
 from ..janela import IDENTIFICAR
 
 log = logging.getLogger(__name__)
@@ -52,12 +49,12 @@ def instala(ctx):
             barra_des.hide()
             win.extra_topo = 0
             ctx.alfinete.setVisible(True)
-            ctx.p_ciclo.setVisible(True)        # volta o que estava identificado
+            ctx.lugar.setVisible(True)          # volta o que estava identificado
             return
         # ⚠️⚠️ DESENHANDO, SO' O DESENHO: o alfinete e a serie do ultimo pixel identificado nao
         # dizem respeito ao contorno e disputavam a tela com ele.
         ctx.alfinete.setVisible(False)
-        ctx.p_ciclo.setVisible(False)           # o divisor entrega a altura toda ao mapa
+        ctx.lugar.setVisible(False)             # o divisor entrega a altura toda ao mapa
         if desenho._roi is not None:
             fase = "ajuste"
             _pt_br_no_menu_do_vertice()
@@ -141,23 +138,24 @@ def instala(ctx):
         desenho.cancela()
         _larga_proposta()
         cam_faz.oculto = None
+        # ⚠️ o contorno ja' esta' gravado AQUI; o cadastro se preenche na aba Fazenda, no lugar, sem
+        # janela por cima do mapa. Fechar o programa sem preencher nao perde o desenho.
+        nova = fid is None
         f = cadastro.salva(fid, pts, extra or None)
-        dlg = DialogoFazenda(f, win)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            dados = dlg.dados()
-            dados.update(extra)          # os dados do CAR nao se editam no formulario
-            f = cadastro.salva(f["id"], None, dados)
         cam_faz.redesenha()
         tabs.fazendas.lista(cadastro, selecionar=f["id"])
         ctx.atualiza_busca()
-        win.avisa(f"Fazenda gravada · {f.get('nome') or 'sem nome'}")
         log.info("fazenda #%d: %s (%.1f ha)", f["id"], f.get("nome") or "-", f.get("area_ha") or 0)
         usa_modo(IDENTIFICAR)
+        ctx.lugar.mostra_fazenda(f, foco=True)
+        ctx.lugar.vai("fazenda")
+        win.abre_painel()
+        win.avisa("Contorno gravado — preencha o cadastro abaixo" if nova else "Contorno atualizado")
 
     def cancela():
         for c in camadas:
             c.limpa_selecao()
-        if estado["modo"] in (DESENHAR, EDITAR):
+        if estado["modo"] == DESENHAR:
             usa_modo(IDENTIFICAR)
 
     def desfaz():
@@ -227,15 +225,6 @@ def instala(ctx):
                 _clique_copia(row, col)
             atualiza_barra()
             return
-        if estado["modo"] == EDITAR and ev.double():
-            p = view.vb.mapSceneToView(ev.scenePos())
-            f = cadastro.em(int(p.y()), int(p.x()))
-            if f:
-                dlg = DialogoFazenda(f, win)
-                if dlg.exec() == QDialog.DialogCode.Accepted:
-                    cadastro.salva(f["id"], None, dlg.dados())
-                    cam_faz.redesenha()
-                    tabs.fazendas.lista(cadastro, selecionar=f["id"])
 
     view.glw.scene().sigMouseClicked.connect(no_clique)
     barra_des.ferramenta.connect(usa_ferramenta)

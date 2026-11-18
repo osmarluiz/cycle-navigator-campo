@@ -16,6 +16,7 @@ from ..ciclos import PainelCiclo
 from ..fazendas import CadastroFazendas
 from ..janela import JanelaCampo
 from ..pontos import PainelPontos
+from ..painel_lugar import PainelLugar
 from ..tabelas import JanelaTabelas
 from .fontes import CAMADAS_ANO, CAMADAS_MES, monta, serie
 
@@ -70,7 +71,8 @@ def instala(ctx):
         return [c for c, _ in n.most_common()]
 
     p_ciclo = PainelCiclo(culturas_usadas, cores=cfg.classes, mais_usadas=mais_usadas)
-    win = JanelaCampo(view, safras, CAMADAS_MES, p_ciclo,
+    lugar = PainelLugar(p_ciclo)           # abas Pixel | Fazenda (ver painel_lugar.py)
+    win = JanelaCampo(view, safras, CAMADAS_MES, lugar,
                       camadas_ano=[c for c in CAMADAS_ANO if c in bases])
     win.resize(1400, 880)
 
@@ -136,6 +138,7 @@ def instala(ctx):
     ctx.mais_usadas = mais_usadas
     ctx.ndvi = ndvi
     ctx.p_ciclo = p_ciclo
+    ctx.lugar = lugar
     ctx.p_pontos = p_pontos
     ctx.pivos = pivos
     ctx.poe_alfinete = poe_alfinete

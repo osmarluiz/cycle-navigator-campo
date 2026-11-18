@@ -34,7 +34,7 @@ from PyQt6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, 
 log = logging.getLogger(__name__)
 
 STATUS = ["nao visitado", "visitado", "nao encontrado", "recusou"]
-COR_STATUS = {"nao visitado": "#9aa0a6", "visitado": "#33c16f",
+COR_STATUS = {"nao visitado": "#d6d9cb", "visitado": "#33c16f",
               "nao encontrado": "#d9a441", "recusou": "#c0392b"}
 COLUNAS = [("nome", "Fazenda"), ("proprietario", "Proprietário"), ("contato", "Contato"),
            ("status", "Visita"), ("data_visita", "Data"), ("car", "CAR"), ("area_ha", "Área (ha)")]
@@ -279,15 +279,15 @@ class CamadaFazendas:
             if len(poli) < 3 or f["id"] == self.oculto:
                 continue
             a = np.asarray(poli + [poli[0]], float)
-            cor = COR_STATUS.get(f.get("status"), "#9aa0a6")
+            cor = COR_STATUS.get(f.get("status"), "#d6d9cb")
             linha = pg.PlotDataItem(a[:, 0], a[:, 1], pen=pg.mkPen(cor, width=2.5))
             linha.setZValue(15)
             # rotulo legivel SOBRE a imagem: tamanho de interface e fundo escuro translucido. O
             # TextItem padrao vem em 8 px sem fundo, e some em cima de um pivo claro.
-            nome = f.get("nome") or f"#{f['id']}"
-            txt = pg.TextItem(html=f'<span style="font-size:13px;font-weight:600;color:{cor};'
+            nome = f.get("nome") or "sem nome"         # o texto e' sempre claro; a COR e' so' a borda
+            txt = pg.TextItem(html=f'<span style="font-size:13px;font-weight:600;color:#ecebe0;'
                                    f'padding:2px 6px">{nome}</span>',
-                              anchor=(0.5, 1.3), fill=pg.mkBrush(10, 12, 8, 170),
+                              anchor=(0.5, 1.3), fill=pg.mkBrush(10, 12, 8, 215),
                               border=pg.mkPen(cor, width=1))
             txt.setPos(float(a[:, 0].mean()), float(a[:, 1].mean()))
             txt.setZValue(16)

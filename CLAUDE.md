@@ -297,6 +297,24 @@ coisas**. O que ficou decidido, e não deve ser desfeito:
   sumiram às 15:38 e não se sabe se foi exclusão por engano. A exclusão de talhão ainda não diz o
   nome do que vai excluir (a de fazenda diz). Fazer.
 
+**Depois, no mesmo dia, com o ok dele ("sim")**:
+
+- **O painel de baixo tem duas abas, `Pixel | Fazenda`** (`painel_lugar.py`). A aba Fazenda é o
+  cadastro inteiro do lugar clicado, editável ali, com "Editar contorno" e "Excluir fazenda". A aba
+  não muda sozinha ao clicar noutro lugar. Concluir um desenho grava o contorno e abre a aba Fazenda
+  com o foco no nome — **sem diálogo por cima do mapa**. Texto de cadastro digitado e não salvo é
+  gravado ao sair do lugar.
+- **Só dois modos: Identificar e Desenhar.** O modo Editar acabou.
+- **Sair de um ponto com cultura nomeada e não gravada pergunta** Gravar / Descartar / Voltar
+  (`pode_sair` em `montagem/clique.py`). Vale para clique no mapa e troca de modo.
+- **"Ponto" é o que se levanta; "fazenda" é o polígono; "talhão" só a camada de contornos prontos.**
+- **As cores das culturas foram medidas** (`config.py`): busca que maximiza a diferença entre todos
+  os pares em OKLab, em visão normal e simulando deuteranopia e protanopia. Antes de trocar uma cor,
+  meça de novo; o nome da cultura fica sempre escrito ao lado, porque 16 classes não se distinguem
+  só por cor.
+- Faixa na curva é um véu (alfa 62/40/22), não um bloco; `TEXT_3` tem contraste ≥ 4,5:1.
+- `texto.py`: `plural()` e `data_br()`. Nada de "(s)", "(ões)" nem data ISO na tela.
+
 **Ainda por fazer do que ele pediu**: os comandos de edição de vértice continuam os do
 `PolyLineROI` (arrastar, clicar na linha, botão direito apaga) — falta desfazer no ajuste e snap;
 editar atributos direto na tabela; todas as safras numa tabela só.

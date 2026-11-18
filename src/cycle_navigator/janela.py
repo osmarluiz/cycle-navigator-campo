@@ -38,8 +38,6 @@ DICA = {
     IDENTIFICAR: "Clique no mapa: a série do pixel e a fazenda do lugar  ·  ← → troca o mês",
     DESENHAR: "Desenhe o contorno de uma fazenda: à mão, automático ou copiado  ·  "
               "Esc cancela",
-    EDITAR: "Clique numa fazenda para mover os vértices · num contorno do CAR/SAM para adotá-lo · "
-            "duplo-clique abre o cadastro · Esc sai",
 }
 
 
@@ -253,9 +251,7 @@ class BarraTopo(QWidget):
         for modo, txt, ico, dica in (
                 (IDENTIFICAR, "Identificar", "mdi6.cursor-default-click-outline",
                  "clicar no mapa mostra o pixel e a fazenda (Esc)"),
-                (DESENHAR, "Desenhar", "mdi6.vector-polygon", "traçar o contorno de uma fazenda"),
-                (EDITAR, "Editar", "mdi6.vector-square-edit",
-                 "mover vértices, adotar um contorno do CAR/SAM, abrir o cadastro")):
+                (DESENHAR, "Desenhar", "mdi6.vector-polygon", "traçar o contorno de uma fazenda")):
             b = QPushButton(txt)
             b.setCheckable(True)
             b.setIcon(qta.icon(ico, color=estilo.TEXT, color_on=estilo.ON_ACCENT))

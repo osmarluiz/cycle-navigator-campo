@@ -9,7 +9,6 @@ import logging
 import numpy as np
 from .. import estilo
 from ..janela import DESENHAR
-from ..janela import EDITAR
 from ..janela import IDENTIFICAR
 from PyQt6.QtWidgets import QMessageBox
 
@@ -79,23 +78,6 @@ def instala(ctx):
     def ao_clicar(row, col, manter=None, rec=None):
         if estado["modo"] == DESENHAR:
             return
-        if estado["modo"] == EDITAR:
-            f = cadastro.em(row, col)
-            if f:
-                tabs.fazendas.lista(cadastro, selecionar=f["id"])
-                usa_modo(DESENHAR, f["id"])      # vertices editaveis
-                return
-            # ⚠️ clicar num imovel do CAR que ainda nao e' fazenda SELECIONA e abre para editar:
-            # o contorno vira poligono editavel na hora, Enter abre o cadastro.
-            cam, i = sob_o_clique(row, col)
-            if cam is not None:
-                cs, rs = cam.aneis[i]
-                pts = [(float(c), float(r)) for c, r in zip(cs, rs)]
-                if len(pts) > 2 and pts[0] == pts[-1]:
-                    pts = pts[:-1]
-                usa_modo(DESENHAR, None, semente=(pts, cam.dados(cam.attr[i])))
-                status(f"{cam.titulo} selecionado — ajuste os vértices ou dê Enter para cadastrar")
-            return
         i_sam = cam_sam.em_idx(row, col) if cam_sam is not None else None
         # ⚠️ CLICAR DE NOVO NO MESMO TALHAO REABRE O QUE FOI GRAVADO. O deposito procura o pixel
         # EXATO; sem isto o segundo clique (2 m ao lado) abria um talhao "novo" e gravava um
@@ -144,6 +126,7 @@ def instala(ctx):
         if manter:
             faixas = manter
         faz = cadastro.em(row, col)
+        ctx.lugar.mostra_fazenda(faz)
         # ⚠️ com o CAR/SAM ligado, o clique tambem SELECIONA o contorno sob o pixel: destaque e
         # cartao com os dados. Nao muda de modo nem adota -- so' mostra.
         cam, i = sob_o_clique(row, col)
@@ -162,8 +145,6 @@ def instala(ctx):
         estado["sam"] = i_sam if do_talhao else None
         if faz is not None and not produtor:
             produtor = faz.get("proprietario") or faz.get("nome") or ""
-        rot = lambda t: (f"<span style='color:{estilo.TEXT_3};font-size:10px;font-weight:600;"
-                         f"letter-spacing:1px'>{t}</span> &nbsp;")
 
         def br(v, casas=1):
             return f"{v:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -187,18 +168,9 @@ def instala(ctx):
             sub.append(f"{ll[0]:.5f}, {ll[1]:.5f}")
         if ja_levantado:
             sub.append(f"<span style='color:{estilo.ACCENT}'>já levantado</span>")
-        # ⚠️⚠️ DUAS INFORMACOES, DUAS LINHAS: a do pixel (onde, que curva) e a da fazenda (de quem).
-        # Misturadas numa frase so', ninguem sabia qual dado vinha de onde.
-        if faz is not None:
-            dono = faz.get("proprietario") or ""
-            partes = [f"<b>{faz.get('nome') or 'sem nome'}</b>"] + ([dono] if dono else [])
-            if faz.get("area_ha"):
-                partes.append(f"{br(faz['area_ha'])} ha")
-            linha_faz = " · ".join(partes)
-        else:
-            linha_faz = (f"<span style='color:{estilo.TEXT_3}'>nenhuma cadastrada aqui — "
-                         f"use Desenhar para criar</span>")
-        subtitulo = (rot("PIXEL") + " &nbsp;·&nbsp; ".join(sub) + "<br>" + rot("FAZENDA") + linha_faz)
+        # a fazenda do lugar NAO entra aqui: ela tem a sua aba (painel_lugar.py), e o rotulo da aba
+        # ja' diz o nome dela
+        subtitulo = " &nbsp;·&nbsp; ".join(sub)
         p_ciclo.define_fonte(i_sam is not None or rec is not None,
                              "talhao" if (do_talhao or rec is not None) else "pixel")
         p_ciclo.mostra(row, col, curva, cfg.meses, janela=cfg.meses_de(estado["safra"]),

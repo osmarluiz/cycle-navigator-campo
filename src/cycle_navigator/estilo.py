@@ -140,6 +140,12 @@ QPushButton#modo {{ border-radius:8px; padding:0 16px; }}
 QPushButton#modo:checked {{ background:{ACCENT}; color:{ON_ACCENT}; border-color:{ACCENT}; }}
 QPushButton#modo:checked:hover {{ background:{ACCENT_HOVER}; }}
 
+/* as abas do painel do lugar: Pixel | Fazenda */
+QPushButton#aba {{ background:transparent; border:none; border-bottom:2px solid transparent;
+                   border-radius:0; color:{TEXT_2}; padding:4px 12px 6px 10px; font-weight:600; }}
+QPushButton#aba:hover {{ color:{TEXT}; }}
+QPushButton#aba:checked {{ color:{TEXT}; border-bottom-color:{ACCENT}; }}
+
 /* a lista das faixas, ao lado da curva */
 QFrame#faixa_linha {{ border:1px solid transparent; border-radius:8px; min-height:26px; }}
 QFrame#faixa_linha:hover {{ background:{HOVER}; }}
@@ -244,6 +250,7 @@ QLabel#passo {{ color:{TEXT_2}; font-size:14px; }}
 QLabel#num {{ background:{RAISED}; color:{ACCENT}; border:1px solid {BORDER_STRONG};
               border-radius:13px; min-width:26px; max-width:26px; min-height:26px; max-height:26px;
               font-weight:700; font-size:13px; qproperty-alignment:AlignCenter; }}
+QLabel#titulo {{ font-size:15px; font-weight:600; color:{TEXT}; }}
 QLabel#subtitulo {{ color:{TEXT_2}; font-size:12px; }}
 
 /* controle segmentado: botoes encostados, o marcado aceso */
