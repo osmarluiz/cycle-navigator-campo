@@ -10,6 +10,8 @@ import numpy as np
 from .. import estilo
 from ..janela import DESENHAR
 from ..janela import EDITAR
+from ..janela import IDENTIFICAR
+from PyQt6.QtWidgets import QMessageBox
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +41,39 @@ def instala(ctx):
     win = ctx.win
 
     # ---------------- clique no mapa ----------------
+    def _assinatura():
+        return (tuple((s["ini"], s["fim"], s["cultura"], s["confianca"]) for s in p_ciclo.segmentos()),
+                p_ciclo.ed_produtor.text().strip())
+
+    def marca_limpo():
+        estado["limpo"] = _assinatura() if p_ciclo.rc is not None else None
+
+    def pode_sair():
+        """⚠️⚠️ NADA DITO PELO PRODUTOR SE PERDE CALADO. Sair de um ponto com cultura nomeada e nao
+        gravada (outro clique, outro modo) descartava tudo sem aviso. Agora pergunta -- e so' quando
+        ha' de fato algo nomeado e diferente do que esta' gravado."""
+        if p_ciclo.rc is None or estado.get("limpo") is None or _assinatura() == estado["limpo"]:
+            return True
+        if not any(s["cultura"] for s in p_ciclo.segmentos()):
+            return True
+        cx = QMessageBox(win)
+        cx.setWindowTitle("Faixas não gravadas")
+        cx.setText("Você nomeou as faixas deste ponto e ainda não gravou.")
+        grava = cx.addButton("Gravar", QMessageBox.ButtonRole.AcceptRole)
+        larga = cx.addButton("Descartar", QMessageBox.ButtonRole.DestructiveRole)
+        cx.addButton("Voltar", QMessageBox.ButtonRole.RejectRole)
+        cx.setDefaultButton(grava)
+        cx.exec()
+        if cx.clickedButton() is larga:
+            return True
+        if cx.clickedButton() is grava:
+            p_ciclo._emite()
+            return _assinatura() == estado.get("limpo")      # gravou de fato (tinha levantador)?
+        return False
+
     def clique_do_mapa(row, col):
+        if estado["modo"] == IDENTIFICAR and not pode_sair():
+            return
         ao_clicar(row, col)
 
     def ao_clicar(row, col, manter=None, rec=None):
@@ -170,7 +204,11 @@ def instala(ctx):
         p_ciclo.mostra(row, col, curva, cfg.meses, janela=cfg.meses_de(estado["safra"]),
                        ja_gravado=faixas, produtor=produtor, titulo=titulo,
                        subtitulo=subtitulo)
+        if not manter:
+            marca_limpo()
 
     # o que esta peca deixa para as outras
     ctx.ao_clicar = ao_clicar
     ctx.clique_do_mapa = clique_do_mapa
+    ctx.marca_limpo = marca_limpo
+    ctx.pode_sair = pode_sair

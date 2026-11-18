@@ -33,7 +33,12 @@ def instala(ctx):
     win.barra.safraMudou.connect(usa_safra)
     win.barra.camadaMudou.connect(usa_camada)
     win.barra.dataMudou.connect(usa_data)
-    win.barra.modoMudou.connect(usa_modo)
+    def troca_modo(m):
+        if ctx.estado["modo"] == "identificar" and m != "identificar" and not ctx.pode_sair():
+            win.barra.mostra_modo("identificar")        # o botao volta: a pessoa escolheu ficar
+            return
+        usa_modo(m)
+    win.barra.modoMudou.connect(troca_modo)
     win.barra.buscou.connect(procura)
     win.barra.verLevantados.connect(ve_levantados)
     if cam_car is not None:

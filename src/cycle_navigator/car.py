@@ -309,7 +309,7 @@ def dados_do_sam(a):
 def html_sam(a, area_medida):
     d = dados_do_sam(a)
     area = f"{(area_medida or float(a.get('area_ha') or 0)):,.1f}".replace(",", ".")
-    return ("<div style='font-size:13px;font-weight:600;margin-bottom:4px'>Talhão (SAM)</div>"
+    return ("<div style='font-size:13px;font-weight:600;margin-bottom:4px'>Talhão pronto</div>"
             f"<div style='color:#a9ac9c;font-size:11px;margin-bottom:6px'>contorno pronto nº {d['sam_id']}</div>"
             f"<div><span style='color:#a9ac9c'>Área</span>&nbsp; <b>{area}</b> ha</div>"
             f"<div><span style='color:#a9ac9c'>Confiança do modelo</span>&nbsp; IoU {d['sam_iou']:.2f} · "

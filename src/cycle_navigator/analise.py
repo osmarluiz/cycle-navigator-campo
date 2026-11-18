@@ -59,7 +59,7 @@ def pendencias(pt, repetidos=()):
     if not (pt.get("produtor") or "").strip():
         m.append("sem produtor")
     if pt.get("id") in repetidos:
-        m.append("mesmo talhão gravado mais de uma vez")
+        m.append("mesmo ponto gravado mais de uma vez")
     return m
 
 
@@ -189,7 +189,7 @@ class JanelaAnalise(QWidget):
         cab.addWidget(self.bt_exp)
         raiz.addLayout(cab)
 
-        self.vazio = QLabel("Nada levantado nesta safra ainda.\nClique num talhão no mapa, diga o "
+        self.vazio = QLabel("Nada levantado nesta safra ainda.\nClique num ponto do mapa, diga o "
                             "que foi plantado e grave: os números aparecem aqui.")
         self.vazio.setObjectName("vazio")
         self.vazio.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -202,7 +202,7 @@ class JanelaAnalise(QWidget):
         g.setSpacing(12)
 
         nums = QHBoxLayout(); nums.setSpacing(12)
-        self.n_talhoes = _Numero("talhões levantados")
+        self.n_talhoes = _Numero("pontos levantados")
         self.n_ha = _Numero("hectares")
         self.n_prod = _Numero("produtores")
         self.n_sist = _Numero("sistemas de cultivo")
@@ -212,7 +212,7 @@ class JanelaAnalise(QWidget):
         g.addLayout(nums, 0, 0, 1, 2)
 
         # ---- sistemas ----
-        f, lay, _c, _d = _bloco("Sistemas de cultivo", "clique num para ver os talhões dele")
+        f, lay, _c, _d = _bloco("Sistemas de cultivo", "clique num para ver os pontos dele")
         self.area_sist = QScrollArea(); self.area_sist.setWidgetResizable(True)
         self.area_sist.setFrameShape(QFrame.Shape.NoFrame)
         self.cx_sist = QWidget()
@@ -228,7 +228,7 @@ class JanelaAnalise(QWidget):
         g.addWidget(f, 1, 0)
 
         # ---- calendario ----
-        f, lay, _c, _d = _bloco("Calendário da safra", "talhões com cada cultura, mês a mês")
+        f, lay, _c, _d = _bloco("Calendário da safra", "pontos com cada cultura, mês a mês")
         self.g_cal = _grafico()
         self.legenda = QLabel(""); self.legenda.setObjectName("dica")
         self.legenda.setTextFormat(Qt.TextFormat.RichText); self.legenda.setWordWrap(True)
@@ -237,7 +237,7 @@ class JanelaAnalise(QWidget):
 
         # ---- curvas ----
         f, lay, _c, _d = _bloco("Vigor médio por sistema",
-                                "a curva (NDVI) média dos talhões de cada sistema")
+                                "a curva (NDVI) média dos pontos de cada sistema")
         self.g_cur = _grafico()
         self.g_cur.setYRange(0, 1, padding=0.02)
         self.leg_cur = QLabel(""); self.leg_cur.setObjectName("dica")
@@ -274,7 +274,7 @@ class JanelaAnalise(QWidget):
         self.tab.setWordWrap(False)
         self.tab.cellDoubleClicked.connect(self._ir)
         lay.addWidget(self.tab, 1)
-        rod = QLabel("duplo clique abre o talhão no mapa"); rod.setObjectName("dica")
+        rod = QLabel("duplo clique abre o ponto no mapa"); rod.setObjectName("dica")
         lay.addWidget(rod)
         g.addWidget(f, 2, 1)
         g.setRowStretch(1, 1); g.setRowStretch(2, 1)
@@ -400,7 +400,7 @@ class JanelaAnalise(QWidget):
                                     f"{len(linhas)} de {plural(r['n'], 'ponto', 'pontos')}")
         elif filtro == "*":
             linhas = self._pts
-            self.t_lista.setText("Todos os talhões")
+            self.t_lista.setText("Todos os pontos")
             self.dica_lista.setText(plural(len(linhas), "ponto", "pontos"))
         else:
             linhas = [p for p in self._pts if _sistema(p) == filtro]

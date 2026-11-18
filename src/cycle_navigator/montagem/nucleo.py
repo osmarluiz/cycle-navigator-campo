@@ -99,8 +99,8 @@ def instala(ctx):
 
     def conta():
         n = len(p_pontos.store) if p_pontos.store is not None else 0
-        win.barra.info.setText("nenhum talhão" if n == 0 else
-                               "1 talhão" if n == 1 else f"{n} talhões")
+        win.barra.info.setText("nenhum ponto" if n == 0 else
+                               "1 ponto" if n == 1 else f"{n} pontos")
 
     # ⚠️ O ALFINETE: onde foi o clique. Sem ele, a curva la' embaixo nao dizia DE ONDE era -- o
     # titulo mostrava linha e coluna do pixel, que ninguem sabe achar no mapa.

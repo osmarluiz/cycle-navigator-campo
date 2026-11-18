@@ -297,12 +297,10 @@ class PainelCiclo(QWidget):
         f1 = self._f1 = QHBoxLayout()
         f1.setSpacing(6)
         self.bt_add = self.lista.bt_add
-        f1.addStretch(1)
         f1.addWidget(_rot("Produtor"))
         self.ed_produtor = QLineEdit()
         self.ed_produtor.setPlaceholderText("quem respondeu")
-        self.ed_produtor.setFixedWidth(190)
-        f1.addWidget(self.ed_produtor)
+        f1.addWidget(self.ed_produtor, 1)
         self.bt_gravar = QPushButton("Gravar")
         self.bt_gravar.setObjectName("cta")
         self.bt_gravar.setIcon(qta.icon("mdi6.check-bold", color=estilo.ON_ACCENT))
@@ -311,7 +309,7 @@ class PainelCiclo(QWidget):
         self.bt_gravar.setToolTip("gravar o que foi dito deste ponto (⌘S)")
         self.bt_gravar.setDefault(True)
         f1.addWidget(self.bt_gravar)
-        lay.addLayout(f1)
+        self.lista.layout().addLayout(f1)       # quem respondeu e Gravar fecham a coluna das faixas
 
         # ---------------- fileira 2: a faixa em foco ----------------
         f2 = self._f2 = QHBoxLayout()
@@ -725,14 +723,15 @@ class PainelCiclo(QWidget):
 
     # ================= culturas de um clique =================
     def _atualiza_rapidas(self):
-        """Os botoes das culturas mais provaveis: as mais gravadas primeiro, depois as de sempre."""
+        """Os botoes das culturas mais provaveis, SEMPRE NA MESMA ORDEM: quem clica de memoria nao
+        pode achar o botao noutro lugar porque gravou mais milho que soja."""
         while self.rapidas.count():
             w = self.rapidas.takeAt(0).widget()
             if w:
                 w.setParent(None)
         conhecidas = {c.lower(): c for c in self._conhecidas()}
         ordem, vistos = [], set()
-        for c in list(self._mais_usadas()) + RAPIDAS:
+        for c in RAPIDAS + list(self._mais_usadas()):
             k = c.lower()
             if k in vistos or (k not in conhecidas and c not in RAPIDAS):
                 continue

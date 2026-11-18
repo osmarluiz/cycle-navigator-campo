@@ -56,7 +56,7 @@ def instala(ctx):
         st = p_pontos.store
         pts = list(st.points) if st is not None else []
         if not pts:
-            win.avisa("Nenhum talhão levantado nesta safra ainda", "info")
+            win.avisa("Nenhum ponto levantado nesta safra ainda", "info")
             return
         xs = [p["col"] for p in pts]; ys = [p["row"] for p in pts]
         m = max(300, 0.15 * max(max(xs) - min(xs), max(ys) - min(ys)))

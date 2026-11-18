@@ -42,7 +42,7 @@ def instala(ctx):
     else:
         cam_car = None
     cam_sam = (CamadaCAR(view, cfg.sam, classe.transform, classe.crs, cor=COR_SAM,
-                         cor_sel="#9fe0ff", titulo="Talhão (SAM)", html=html_sam,
+                         cor_sel="#9fe0ff", titulo="Talhão pronto", html=html_sam,
                          dados=dados_do_sam) if cfg.sam else None)
     if cam_sam is not None and cam_sam.ok:
         win.barra.bt_sam.show()

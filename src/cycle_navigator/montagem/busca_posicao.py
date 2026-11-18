@@ -57,7 +57,7 @@ def instala(ctx):
             rc = vai_a_coordenada(r[1], r[2])
             if rc:
                 poe_alfinete(*rc)
-                win.avisa("Coordenada localizada — clique no talhão para abrir", "info")
+                win.avisa("Coordenada localizada — clique no mapa para identificar", "info")
         elif r[0] == "fazenda":
             centra_fazenda(r[1])
         elif r[0] == "municipio":

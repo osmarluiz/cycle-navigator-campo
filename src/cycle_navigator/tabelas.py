@@ -178,7 +178,7 @@ class AbaPontos(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         lay = QVBoxLayout(self)
-        self.vazio = QLabel("Nenhum talhão levantado nesta safra. Clique num talhão no mapa.")
+        self.vazio = QLabel("Nenhum ponto levantado nesta safra. Clique num ponto do mapa.")
         self.vazio.setObjectName("vazio")
         self.vazio.setWordWrap(True)
         lay.addWidget(self.vazio)
@@ -286,7 +286,7 @@ class JanelaTabelas(QWidget):
         self.pontos = AbaPontos()
         self.abas = QTabWidget()
         self.abas.addTab(self.fazendas, "Fazendas")
-        self.abas.addTab(self.pontos, "Talhões levantados")
+        self.abas.addTab(self.pontos, "Pontos levantados")
         self.abas.setCurrentIndex(1)     # abre no que se veio ver: o que ja' foi levantado
         lay = QVBoxLayout(self)
         lay.setContentsMargins(8, 4, 8, 8)

@@ -170,7 +170,7 @@ class BarraTopo(QWidget):
         self.info.setObjectName("contagem")
         self.info.setIcon(_icone("mdi6.map-marker-multiple-outline"))
         self.info.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.info.setToolTip("talhões já levantados nesta safra — clique para ver todos no mapa")
+        self.info.setToolTip("pontos já levantados nesta safra — clique para ver todos no mapa")
         self.info.clicked.connect(self.verLevantados)
         l1.addWidget(self.info)
         self.bt_tabela = QToolButton()
@@ -178,7 +178,7 @@ class BarraTopo(QWidget):
         self.bt_tabela.setFixedSize(34, 34)
         self.bt_tabela.setIcon(_icone("mdi6.table"))
         self.bt_tabela.setIconSize(QSize(20, 20))
-        self.bt_tabela.setToolTip("Tabelas: fazendas e talhões levantados")
+        self.bt_tabela.setToolTip("Tabelas: fazendas e pontos levantados")
         self.bt_tabela.clicked.connect(self.abrirTabela)
         l1.addWidget(self.bt_tabela)
         self.bt_analise = QToolButton()
@@ -202,7 +202,7 @@ class BarraTopo(QWidget):
         self.bt_exportar.setFixedSize(34, 34)
         self.bt_exportar.setIcon(_icone("mdi6.export"))
         self.bt_exportar.setIconSize(QSize(20, 20))
-        self.bt_exportar.setToolTip("Exportar os talhões da safra (GeoPackage, Shapefile ou CSV)")
+        self.bt_exportar.setToolTip("Exportar os pontos da safra (GeoPackage, Shapefile ou CSV)")
         self.bt_exportar.clicked.connect(self.exportar)
         l1.addWidget(self.bt_exportar)
         l1.addWidget(_sep())
@@ -211,7 +211,7 @@ class BarraTopo(QWidget):
         self.ed_levantador = QLineEdit()
         self.ed_levantador.setPlaceholderText("seu nome")
         self.ed_levantador.setMinimumWidth(96); self.ed_levantador.setMaximumWidth(150)
-        self.ed_levantador.setToolTip("quem está levantando: vai junto com cada talhão gravado")
+        self.ed_levantador.setToolTip("quem está levantando: vai junto com cada ponto gravado")
         self.ed_levantador.addAction(_icone("mdi6.account-outline", estilo.TEXT_2),
                                      QLineEdit.ActionPosition.LeadingPosition)
         l1.addWidget(self.ed_levantador)
@@ -268,22 +268,22 @@ class BarraTopo(QWidget):
         self._bt_modo[IDENTIFICAR].setChecked(True)
         lay.addWidget(_sep())
 
-        def camada(txt, ico, dica, sinal):
+        def camada(txt, ico, cor, dica, sinal):      # o icone na COR DA LINHA: e' a legenda
             b = QPushButton(txt)
             b.setObjectName("camada")
             b.setCheckable(True)
-            b.setIcon(qta.icon(ico, color=estilo.TEXT))
+            b.setIcon(qta.icon(ico, color=cor))
             b.setIconSize(QSize(18, 18))
             b.setToolTip(dica)
             b.toggled.connect(sinal)
             b.hide()                      # so' aparece se a camada carregou
             lay.addWidget(b)
             return b
-        self.bt_car = camada("CAR", "mdi6.land-fields",
+        self.bt_car = camada("CAR", "mdi6.land-fields", "#e0b84a",
                              "imóveis do CAR (tracejado ocre): clique num deles para ver o que o "
                              "cadastro diz", self.carToggled)
-        self.bt_sam = camada("Talhões", "mdi6.vector-selection",
-                             "talhões recortados automaticamente (linhas azuis)", self.samToggled)
+        self.bt_sam = camada("Talhões", "mdi6.vector-selection", "#7fd3ff",
+                             "talhões prontos, recortados automaticamente (linhas azuis)", self.samToggled)
 
     # ---------------- data ----------------
     def lista_datas(self, meses, atual=None):

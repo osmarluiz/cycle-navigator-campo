@@ -66,7 +66,7 @@ def instala(ctx):
         tabs.pontos.bt_desfaz.setEnabled(estado["excluido"] is not None)
         import sys
         tecla = "⌘Z" if sys.platform == "darwin" else "Ctrl+Z"
-        win.avisa(f"Talhão excluído  ·  {tecla} desfaz", "info", 6000)
+        win.avisa(f"Ponto excluído  ·  {tecla} desfaz", "info", 6000)
 
     def _depois_de_mexer(row, col):
         p_pontos.atualiza_info()
@@ -84,10 +84,10 @@ def instala(ctx):
             return
         safra, pt = guardado
         if safra != estado["safra"]:
-            win.avisa(f"O talhão excluído é da safra {safra}: volte a ela para desfazer", "info", 5000)
+            win.avisa(f"O ponto excluído é da safra {safra}: volte a ela para desfazer", "info", 5000)
             return
         if st.find_at(pt["row"], pt["col"]) is not None:      # ja' regravaram no mesmo lugar
-            win.avisa("Já existe um talhão gravado nesse lugar", "info")
+            win.avisa("Já existe um ponto gravado nesse lugar", "info")
             return
         if any(q.get("id") == pt.get("id") for q in st.points):
             pt["id"] = max(q["id"] for q in st.points) + 1
@@ -97,7 +97,7 @@ def instala(ctx):
         estado["excluido"] = None
         tabs.pontos.bt_desfaz.setEnabled(False)
         _depois_de_mexer(pt["row"], pt["col"])
-        win.avisa("Talhão de volta", "ok")
+        win.avisa("Ponto de volta", "ok")
 
     # o que esta peca deixa para as outras
     ctx.centra = centra

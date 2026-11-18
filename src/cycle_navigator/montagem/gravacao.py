@@ -71,6 +71,7 @@ def instala(ctx):
         conta()
         refresca_analise()
         win.avisa(("Atualizado · " if atualizou else "Gravado · ") + str(pt["class"]))
+        ctx.marca_limpo()
 
     # ---------------- CAR ----------------
     def aviso_car():

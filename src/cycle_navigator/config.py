@@ -35,23 +35,31 @@ PADROES = ("CYCLE_NAVIGATOR_CONFIG",)
 # sozinho da curva, e e' justamente o que o rotulo de campo serve para conferir.
 # ⚠️ `nao_sei` existe de proposito e fica por ultimo: sem ele, quem esta' em duvida chuta, e um chute
 # entra no arquivo com a mesma cara de uma informacao obtida com o produtor.
+# ⚠️⚠️ AS CORES FORAM MEDIDAS, NAO ESCOLHIDAS A OLHO. Na lista anterior Feijao, Sorgo e Urbana eram
+# tres marrons (diferenca 2 numa escala em que 15 e' o minimo para distinguir), Milho e Milho
+# safrinha dois amarelos, Algodao quase branco -- e para daltonicos Soja e Milho safrinha eram a
+# mesma cor. Estas saem de uma busca que maximiza a diferenca entre TODOS os pares, em visao normal
+# e simulando deuteranopia e protanopia (OKLab), sem encostar no ciano da selecao: as dez lavouras
+# ficam a 11 ou mais entre si (7 para daltonicos). Com 16 classes nao ha' como passar disso so' com
+# cor: por isso o NOME da cultura esta' sempre escrito ao lado. As coberturas (pasto, mata, agua,
+# cidade) ficam em verdes, azul e cinzas, que e' o que se espera delas. Antes de mexer, meca.
 CLASSES_PADRAO = {
-    "Soja":                "#f67825",
-    "Milho":               "#ffd400",
-    "Milho safrinha":      "#c9a227",
-    "Algodão":             "#f2f0e6",
-    "Feijão":              "#8d6e63",
-    "Trigo":               "#d9b382",
-    "Sorgo":               "#b5651d",
-    "Café":                "#5b2d8c",
-    "Cana":                "#7cb342",
-    "Hortaliças":          "#26c6da",
-    "Pastagem":            "#33c16f",
-    "Silvicultura":        "#33691e",
-    "Vegetação natural":   "#9acd32",
-    "Água":                "#1f5fbf",
-    "Urbana/solo exposto": "#976c5e",
-    "nao_sei":             "#7a7a7a",
+    "Soja":                "#eb7323",
+    "Milho":               "#ebeb23",
+    "Milho safrinha":      "#b8b81c",
+    "Algodão":             "#eb8deb",
+    "Feijão":              "#b01cb8",
+    "Trigo":               "#ebc58d",
+    "Sorgo":               "#b85a1c",
+    "Café":                "#89548c",
+    "Cana":                "#eb59bf",
+    "Hortaliças":          "#1c98b8",
+    "Pastagem":            "#49b867",
+    "Silvicultura":        "#2f8a5f",
+    "Vegetação natural":   "#8f9a5c",
+    "Água":                "#3f78e8",
+    "Urbana/solo exposto": "#a8a29a",
+    "nao_sei":             "#777777",
 }
 
 

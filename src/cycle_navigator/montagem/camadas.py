@@ -77,7 +77,7 @@ def instala(ctx):
         estado["safra"] = s
         store = abre_store(cfg, s, classe.transform, classe.crs)
         if getattr(store, "danificado", None):
-            win.avisa(f"O arquivo de talhões da safra {s} estava danificado e foi guardado como "
+            win.avisa(f"O arquivo de pontos da safra {s} estava danificado e foi guardado como "
                       f"{store.danificado.name} — a safra abriu vazia. Avise o Osmar.", "erro", 20000)
         p_pontos.usar(store)
         cam_pontos.usar(store)
