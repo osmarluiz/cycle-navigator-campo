@@ -8,6 +8,7 @@ lido quando a funcao roda, com tudo ja' montado.
 import logging
 from PyQt6.QtCore import Qt
 from ..barra_desenho import AUTO, COPIAR, POLIGONO, BarraDesenho
+from ..caixa import ArrastaCaixa
 from ..fazendas import DesenhoPoligono
 from ..janela import DESENHAR
 from ..janela import IDENTIFICAR
@@ -164,24 +165,27 @@ def instala(ctx):
             return
         rec = estado["auto"]
         if rec:
-            pontos = rec["pontos"][:-1]
-            novo = ctx.pede_recorte(pontos) if pontos else None
+            pontos, cx = rec["pontos"], rec.get("caixa")
+            novo = ctx.pede_recorte(pontos[:-1], cx) if pontos and (cx or len(pontos) > 1) else None
             estado["auto"] = novo
             ctx.desenha_recorte(novo)
         else:
             desenho.desfaz_vertice()
         atualiza_barra()
 
-    def _clique_auto(row, col, mods):
-        """Automatico: o clique propoe; ⇧ soma e ⌥ tira da proposta aberta; clique simples recomeca."""
+    def _clique_auto(row, col, mods, caixa=None):
+        """Automatico: o clique (ou a caixa) propoe; ⇧ soma e ⌥ tira da proposta aberta; apontar de
+        novo sem tecla recomeca."""
         rec = estado["auto"]
         soma = bool(mods & Qt.KeyboardModifier.ShiftModifier)
         tira = bool(mods & Qt.KeyboardModifier.AltModifier)
-        if rec and (soma or tira):
-            pontos = rec["pontos"] + [(row, col, 0 if tira else 1)]
+        if caixa is not None:
+            pontos = []
+        elif rec and (soma or tira):
+            pontos, caixa = rec["pontos"] + [(row, col, 0 if tira else 1)], rec.get("caixa")
         else:
             pontos = [(row, col, 1)]
-        novo = ctx.pede_recorte(pontos)
+        novo = ctx.pede_recorte(pontos, caixa)
         if novo is None or novo["poli"].area * ctx.PX_HA > 3000:
             win.avisa("Não consegui propor um contorno aqui — tente outro ponto ou desenhe à mão",
                       "info", 4000)
@@ -226,6 +230,33 @@ def instala(ctx):
             atualiza_barra()
             return
 
+    def _apontando():
+        """Automatico pronto para receber um clique ou uma caixa (nada tracado nem em ajuste)."""
+        return (estado["modo"] == DESENHAR and estado["ferramenta"] == AUTO and ctx.recorte.ok
+                and not desenho.em_curso)
+
+    def _caixa_feita(r0, c0, r1, c1):
+        _clique_auto(0, 0, Qt.KeyboardModifier.NoModifier, caixa=(r0, c0, r1, c1))
+        atualiza_barra()
+
+    def _opcoes_auto():
+        ctx.recorte.lado = barra_des.auto_lado
+        ctx.recorte.refina = barra_des.auto_refina
+        if not estado["auto"]:
+            ctx.desenha_quadro()
+        atualiza_barra()
+
+    def _mostra_area(pos):
+        """Antes do clique, o quadro tracejado acompanha o cursor: e' a area que o modelo vai ver."""
+        if estado["auto"] or not _apontando() or barra_des.auto_caixa:
+            return
+        p = view.vb.mapSceneToView(pos)
+        ctx.desenha_quadro(ctx.recorte.bloco_para(p.y(), p.x()))
+
+    arrasta = ArrastaCaixa(view, lambda: _apontando() and barra_des.auto_caixa)
+    arrasta.feita.connect(_caixa_feita)
+    barra_des.opcoes.connect(_opcoes_auto)
+    view.glw.scene().sigMouseMoved.connect(_mostra_area)
     view.glw.scene().sigMouseClicked.connect(no_clique)
     barra_des.ferramenta.connect(usa_ferramenta)
     barra_des.desfazer.connect(desfaz)
@@ -241,4 +272,5 @@ def instala(ctx):
     ctx.usa_ferramenta = usa_ferramenta
     ctx.desfaz_desenho = desfaz
     ctx.barra_des = barra_des
+    ctx.arrasta_caixa = arrasta
     ctx.atualiza_barra = atualiza_barra

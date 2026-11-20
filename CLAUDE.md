@@ -326,3 +326,31 @@ uma pergunta só: a resposta do produtor foi registrada certa, completa e sem pe
 **Ainda por fazer do que ele pediu**: os comandos de edição de vértice continuam os do
 `PolyLineROI` (arrastar, clicar na linha, botão direito apaga) — falta desfazer no ajuste e snap;
 editar atributos direto na tabela; todas as safras numa tabela só.
+
+## 12. O SAM do Desenhar, refeito com medição (2026-11-20)
+
+Pedido do Osmar, que escreveu o Remote SAMsing (arXiv 2605.00256). O que mudou em `recorte.py`,
+`caixa.py`, `barra_desenho.py` e `montagem/recorte_vivo.py`, e o que foi **medido** em 9 lugares
+(pivôs de 31 a 144 ha, talhões de 1,6 a 111 ha) antes de fixar os padrões:
+
+- **O modelo vê o que está na tela**: a composição e o realce de "Ver como", não mais o NDVI-temporal
+  fixo. Trocar de composição ou de mês refaz o bloco. Para separar vizinhos pelo calendário, escolha
+  NDVI-temporal no mapa.
+- **Clique ou Caixa** (sub-escolha do Automático). Na Caixa, arrastar desenha a caixa em vez de mover
+  o mapa; ⇧ clique e ⌥ clique continuam corrigindo. O bloco é a caixa × 4: **com × 1,5 o modelo erra**
+  (sem vizinhança não há borda para ver), com × 4 acerta.
+- **"Área vista"** (256, 512, 1024, 2048 px da grade, sempre reamostrados para 1024) com o quadro
+  tracejado no mapa, que acompanha o cursor antes do clique. **Padrão 1024, não 512**: bloco menor
+  que o objeto falha feio e sem avisar (pivô de 144 ha num bloco de 512 px virou uma mancha de
+  0,1 ha no centro, com nota 0,82). Resposta miúda em bloco pequeno é conferida com o dobro.
+- **"Refinar borda"** (ligado): segunda passada num recorte 20% maior que a máscara, com caixa,
+  cliques e a máscara anterior como prompt (a ideia do SAMRefiner, arXiv 2502.06756). **É o que mais
+  melhorou**: a nota subiu em todos os casos (ex.: 0,74 → 0,92; 0,88 → 0,94), o serrilhado sumiu e os
+  vértices caíram de ~190 para ~35 num pivô. Com ela, partir de 512 ou de 1024 dá o mesmo contorno.
+  Custa mais ~0,75 s. Só vale se confirmar a primeira passada (IoU ≥ 0,6).
+- O que o modelo já calculou de um bloco fica guardado (`_guardados`): sem isso cada correção pagava
+  as duas preparações de novo.
+
+Não foi medido contra verdade de campo: a comparação foi visual e pela nota do próprio modelo.
+Acabamento geométrico (endireitar lados, ajustar círculo em pivô) não foi feito.
+
